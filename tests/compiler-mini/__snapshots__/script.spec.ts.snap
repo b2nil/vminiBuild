@@ -1,0 +1,133 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`transform script should transform normal script 1`] = `
+"
+import { ref } from \\"@vue-mini/wechat\\"
+import ComOne from \\"../components/comp.vue\\"
+import ComTwo from \\"../components/comp2.vue\\"
+definePageConfig({
+  a: {c: \\"d\\"},
+  b: \\"a\\"
+})
+export default definePage({
+  components: {
+    ComOne,
+    ComTwo
+  },
+  props: { hi: Number },
+  setup(){
+    const data = ref(0)
+    const method = () => { console.log() }
+    return { 
+      data,
+      method
+    }
+  }
+})
+
+function definePageConfig(config) { return config }
+"
+`;
+
+exports[`transform script should transform normal script 2`] = `
+"import { ref } from \\"@vue-mini/wechat\\";
+export default definePage({
+  properties: { hi: Number },
+  setup() {
+    const data = ref(0);
+    const method = () => {
+      console.log();
+    };
+    return {
+      data,
+      method
+    };
+  }
+});
+"
+`;
+
+exports[`transform script should transform normal script 3`] = `
+Object {
+  "a": Object {
+    "c": "d",
+  },
+  "b": "a",
+  "usingComponents": Object {
+    "com-one": "../components/comp",
+    "com-two": "../components/comp2",
+  },
+}
+`;
+
+exports[`transform script should transform scriptSetup 1`] = `
+"
+import { ref } from \\"@vue-mini/wechat\\"
+import ComOne from \\"../components/comp.vue\\"
+import ComTwo from \\"../components/comp2.vue\\"
+
+definePageConfig({
+  a: {c: \\"d\\"},
+  b: \\"a\\"
+})
+
+defineProps({
+  hi: Number
+})
+
+defineHookConfig({
+  listenPageScroll: true
+})
+
+const data = ref(null)
+
+const method = () => { console.log() }
+
+defineExpose({
+  data,
+  method
+})
+
+function definePageConfig(config) { return config }
+function defineProps(config) { return config }
+function defineExpose(config) { return config }
+function defineHookConfig(config) { return config }
+const COMP_r3m0v3 = { ComOne, ComTwo }
+export default COMP_r3m0v3
+"
+`;
+
+exports[`transform script should transform scriptSetup 2`] = `
+"import { ref, defineComponent } from \\"@vue-mini/wechat\\";
+export default defineComponent({
+  properties: {
+    hi: Number
+  },
+  setup() {
+    const data = ref(null);
+    const method = () => {
+      console.log();
+    };
+    return {
+      data,
+      method
+    };
+  }
+}, {
+  listenPageScroll: true
+});
+"
+`;
+
+exports[`transform script should transform scriptSetup 3`] = `
+Object {
+  "a": Object {
+    "c": "d",
+  },
+  "b": "a",
+  "usingComponents": Object {
+    "com-one": "../components/comp",
+    "com-two": "../components/comp2",
+  },
+}
+`;
