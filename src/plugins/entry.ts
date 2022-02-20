@@ -74,7 +74,7 @@ export default function vueminiPlugin (options: UserConfig = {}): Plugin {
 
       build.onLoad({ filter: /.*/, namespace: "app" }, async (args) => {
         const { path: p, pluginData, } = args
-        let contents = fs.readFileSync(p, "utf8")
+        let contents = await fs.promises.readFile(p, "utf8")
         return {
           contents,
           resolveDir: path.join(pluginData.projectDir, "src"),

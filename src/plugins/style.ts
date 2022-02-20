@@ -26,7 +26,7 @@ export default function styleLoader (options: VueOptions = {}): Plugin {
 
       build.onLoad({ filter: /.*/, namespace: "styles" }, async (args) => {
         const { path: filename, pluginData: { lang } } = args
-        const source = fs.readFileSync(filename, "utf8")
+        const source = await fs.promises.readFile(filename, "utf8")
         const res = await compileStyleAsync({
           source,
           filename,

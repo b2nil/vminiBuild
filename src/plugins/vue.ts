@@ -201,10 +201,10 @@ export default function vuePlugin (rawOptions?: VueOptions): Plugin {
           }
         }
 
-        emitFile(filename, EXTENSIONS.JS, codeForEmit || ``)
-        emitFile(filename, EXTENSIONS.WXML, templateCode)
-        emitFile(filename, EXTENSIONS.WXSS, cssCode)
-        emitFile(filename, EXTENSIONS.JSON, JSON.stringify(config, null, 2))
+        await emitFile(filename, EXTENSIONS.JS, codeForEmit || ``)
+        await emitFile(filename, EXTENSIONS.WXML, templateCode)
+        await emitFile(filename, EXTENSIONS.WXSS, cssCode)
+        await emitFile(filename, EXTENSIONS.JSON, JSON.stringify(config, null, 2))
 
         return {
           contents: codeForBundle,

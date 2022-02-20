@@ -36,8 +36,8 @@ async function loadFromTsconfig () {
     return
   }
 
-  const rawTsconfig = `(${fs.readFileSync("tsconfig.json", { encoding: "utf8" }).toString()})`
-  const tsconfig = extractConfig(rawTsconfig, "tsconfig.json")
+  const rawTsconfig = await fs.promises.readFile("tsconfig.json", { encoding: "utf8" })
+  const tsconfig = extractConfig(`(${rawTsconfig.toString()})`, "tsconfig.json")
 
   if (!tsconfig?.compilerOptions?.paths) {
     return

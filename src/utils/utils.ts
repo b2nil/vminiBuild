@@ -29,9 +29,7 @@ export async function emitFile (filename: string, ext: string, code: string) {
     fs.mkdirSync(dir, { recursive: true })
   }
 
-  fs.writeFile(outputFilename, code, "utf8", (err) => {
-    if (err) throw err
-  })
+  fs.promises.writeFile(outputFilename, code, "utf8")
 }
 
 function getFilename (p: string) {
