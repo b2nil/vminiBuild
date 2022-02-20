@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`transform styles should transform css module 1`] = `
+"
+._btn_xhp46_2 {
+  color: red;
+}
+"
+`;
+
+exports[`transform styles should transform css module 2`] = `
+Object {
+  "btn": "_btn_xhp46_2",
+}
+`;

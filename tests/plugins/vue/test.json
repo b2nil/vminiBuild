@@ -1,0 +1,10 @@
+{
+  "a": {
+    "c": "d"
+  },
+  "b": "a",
+  "usingComponents": {
+    "com-one": "../components/comp",
+    "com-two": "../components/comp2"
+  }
+}

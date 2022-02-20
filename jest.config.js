@@ -4,8 +4,10 @@ module.exports = {
   globals: {
     __PLATFORM__: "weapp"
   },
+  moduleFileExtensions: ["js", "ts"],
   transform: {
-    "^.+\\.tsx?$": "esbuild-jest"
+    "^.+\\.tsx?$": "esbuild-jest",
+    "^.+\\.vue$": "@vue/vue3-jest"
   },
   rootDir: __dirname,
   testMatch: ['<rootDir>/tests/**/*.spec.ts'],

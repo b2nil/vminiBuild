@@ -1,5 +1,5 @@
 import { stringifyNodes } from './stringify'
-import { transformSyntax, transformAssetUrls, transformStyleWithCssVars } from './transforms'
+import { transformSyntax, transformAssetUrls, transformStyleWithCssVars, transformCssModuleClasses } from './transforms'
 import { baseParse, CompilerError, transform } from "@vue/compiler-core"
 
 import type { VueOptions } from 'types'
@@ -48,7 +48,8 @@ export function compileTemplate (
     filename: string,
     id: string,
     cssVars: string[],
-    isComponent?: boolean
+    isComponent?: boolean,
+    cssModules: Record<string, Record<string, string>>
   }
 ): SFCTemplateCompileResults {
   const errors: CompilerError[] = []
@@ -89,6 +90,7 @@ export function compileTemplate (
     scopeId: options.scoped ? longId : undefined,
     nodeTransforms: [
       ...(options?.compilerOptions?.nodeTransforms || []),
+      transformCssModuleClasses(options.cssModules),
       transformSyntax,
       transformAssetUrls(assetOptions),
       transformStyleWithCssVars(options.id, options.cssVars, options.isComponent),

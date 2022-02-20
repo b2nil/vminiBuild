@@ -1,7 +1,8 @@
-import { compileScript, TransformResult } from '../../src/compiler-mini'
+import path from "path"
+import { compileScript } from '../../src/compiler-mini'
 import { externals } from '../../src/utils'
 import { parse } from '@vue/compiler-sfc'
-import path from "path"
+import type { TransformResult } from '../../types'
 
 externals.push("@vue-mini/wechat")
 

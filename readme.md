@@ -1,12 +1,13 @@
 # `vmini-build`
 > 配合 `@vue-mini/wechat` 使用的 `vue sfc` 编译器 + 脚手架
 > - 基于 `esbuild` 的脚手架
-> - 新年小玩具，真正像写 vue 3.0 一样写小程序
+> - 轻量 + 快速
 
 ## 特性
   - [x] vue 3 单文件组件语法
     - [x] script setup
     - [x] cssVars
+    - [x] cssModules
     - [x] pug
     - [x] css preprocess
     - [x] postcss， 默认使用 `Taro` 的 `postcss-pxtransform`
@@ -34,6 +35,7 @@
       - [x] bundle with esbuild to a `cjs` output for requiring module from string
       - [x] support `esm` and `cjs` syntaxes
   - [x] script setup
+    - [x] inject css modules 
     - [x] `defineProps` for props
     - [x] `defineExpose` for setup returns
     - [x] `defineHookConfig` for lifecycle hook configuration
@@ -117,6 +119,7 @@
       - [ ] url transforms
         - [ ] serve locally if `useCDN` is enabled
         - [ ] convert to base64 if not
+    - [x] style module
     - [ ] style scoped
       - [ ] mini-app does not support `btn[data-v-xxx]`, possible implementation is to convert to `.btn.data-v-xxx` and add `data-v-xxx` to every element with `class` attr
 - [ ] mini-app tag.d.ts for volar syntax highlighting

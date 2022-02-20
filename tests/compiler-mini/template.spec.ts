@@ -5,7 +5,8 @@ function compile (
   options: any = {
     id: "test",
     filename: "test.vue",
-    cssVars: []
+    cssVars: [],
+    cssModules: {}
   }
 ) {
   const res = compileTemplate(html, options)
@@ -141,7 +142,8 @@ describe("transform cssVars", () => {
   const opts = {
     id: "abcd123",
     cssVars: ["color", "bgColor"],
-    filename: "test.vue"
+    filename: "test.vue",
+    cssModules: {}
   }
 
   const inlineCssVars = opts.cssVars.map(v => `--${opts.id}-${v}: {{${v}}}`).join("; ")
@@ -256,6 +258,7 @@ describe("transform asset urls", () => {
         filename: "test.vue",
         cssVars: [],
         scoped: true,
+        cssModules: {},
         transformAssetUrls: {
           base: "http://192.168.1.2:3000"
         }
@@ -264,5 +267,25 @@ describe("transform asset urls", () => {
     expect(res).toMatch(
       `<image src="http://192.168.1.2:3000/images/asset.png"/>`
     )
+  })
+})
+
+describe("transform css modules", () => {
+  it.concurrent("shall transform class with cssModules", async () => {
+    const res = compile(
+      `<button :class="styles.btn"/>`,
+      {
+        id: "test",
+        filename: "test.vue",
+        cssVars: [],
+        cssModules: {
+          styles: {
+            btn: "_btn_8ydhi"
+          }
+        }
+      }
+    )
+
+    expect(res).toMatch(`<button class="_btn_8ydhi"/>`)
   })
 })

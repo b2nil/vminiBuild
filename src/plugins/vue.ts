@@ -5,11 +5,8 @@ import {
   cacheAssetPath,
   emitFile,
   externals,
-  extractConfig,
   getFullPath,
-  getURLParams,
   replaceRules,
-  resolveImports
 } from '../utils'
 import {
   parse,
@@ -33,13 +30,13 @@ enum EXTENSIONS {
   JS = ".js"
 }
 
-interface PluginData {
-  descriptor: SFCDescriptor
-  id: string
-  filename: string
-  index?: number
-  isComponent?: boolean
-}
+// interface PluginData {
+//   descriptor: SFCDescriptor
+//   id: string
+//   filename: string
+//   index?: number
+//   isComponent?: boolean
+// }
 
 const getWxsBlock = (blocks: SFCBlock[]): (null | SFCBlock) => {
   let block = null
@@ -67,15 +64,13 @@ export default function vuePlugin (rawOptions?: VueOptions): Plugin {
         "__PLATFORM__": "'weapp'"
       }
 
-      build.onResolve({ filter: /.vue\?/ }, async (args) => {
-        const params = getURLParams(args.path)
-        if (params.type) {
+      build.onResolve({ filter: /\.vue/ }, async (args) => {
+        if (/\.vue$/.test(args.path)) {
           return {
             path: getFullPath(args),
-            namespace: params.type || "file",
+            namespace: "vue",
             pluginData: {
-              ...args.pluginData,
-              index: params.index
+              ...args.pluginData
             }
           }
         }
@@ -86,29 +81,10 @@ export default function vuePlugin (rawOptions?: VueOptions): Plugin {
         }
       })
 
-      build.onLoad({ filter: /\.vue$/ }, async (args) => {
-        const encPath = args.path.replace(/\\/g, "\\\\")
+      build.onLoad({ filter: /.*/, namespace: "vue" }, async (args) => {
         const source = fs.readFileSync(args.path, 'utf8')
         const filename = path.relative(process.cwd(), args.path)
         const { descriptor } = parse(source, { filename })
-
-        // extract page config here
-        // to mark the template as a page or a component
-        // for template cssVars transform during compileTemplate
-        let pageConfig: PageConfig = {}
-        const raw = descriptor?.script
-          ? descriptor?.script?.content || ""
-          : descriptor?.scriptSetup
-            ? descriptor?.scriptSetup?.content || ""
-            : ""
-
-        // extract page config
-        // for marking `.vue` file as a component or a page: 
-        const dpcReg = /definePageConfig\(\{[\w\W]+?\}\)/g
-        const m = dpcReg.exec(raw)
-        if (m) {
-          pageConfig = extractConfig(`exports.default = ${m[0]}`, filename, `definePageConfig`)
-        }
 
         const id = crypto
           .createHash("md5")
@@ -117,74 +93,87 @@ export default function vuePlugin (rawOptions?: VueOptions): Plugin {
           .toString("hex")
           .substring(0, 8)
 
-        let code = ``
-        code += `import script from "${encPath}?type=script";\n`
-        for (const style in descriptor.styles) {
-          code += `import "${encPath}?type=style&index=${style}";\n`
-        }
-        code += `import "${encPath}?type=template";\n`
-        code += `export { script as default };\n`
-
-        return {
-          contents: code,
-          resolveDir: path.dirname(args.path),
-          loader: "js",
-          watchFiles: [args.path],
-          pluginData: {
-            id,
-            filename,
-            descriptor,
-            isComponent: pageConfig?.component
-          }
-        }
-      })
-
-      resolveImports("script", build)
-
-      build.onLoad({ filter: /.*/, namespace: "script" }, async (args) => {
-        const { descriptor, filename } = args.pluginData as PluginData
-        const ret: TransformResult = {}
+        let isComponent = false
+        let config: PageConfig = {}
+        // handle script
+        let codeForEmit = ``
         let codeForBundle = ``
         if (descriptor.scriptSetup || descriptor.script) {
+          const ret: TransformResult = {}
           const script = compileScript(descriptor, ret)
+          config = script.config || {}
+          isComponent = Boolean(config.component)
 
           codeForBundle += script.code || ``
-          const config = script.config || {}
-
           // post tranform
           // - to remove .vue imports and .vue components option
           // - to transform props to properties
           // - to transform script setup
           const post = compileScript(descriptor, ret, true)
-
-          emitFile(filename, EXTENSIONS.JSON, JSON.stringify(config, null, 2))
-          emitFile(filename, EXTENSIONS.JS, post.code || ``)
-
-          return {
-            contents: codeForBundle,
-            loader: script.lang
-              ? script.lang as ("ts" | "jsx" | "tsx")
-              : "js",
-            resolveDir: path.dirname(filename)
-          }
+          codeForEmit = post.code || ``
         }
-      })
 
-      build.onLoad({ filter: /.*/, namespace: "template" }, async (args) => {
-        const { descriptor, id, filename, isComponent } = args.pluginData as PluginData
+        // handle style
+        let cssCode = ``
+        let cssModules: Record<string, Record<string, string>> = {}
+
+        const styleBlocks: SFCStyleBlock[] = descriptor.styles
+        for (const styleBlock of styleBlocks) {
+          const usedCSSModules = Boolean(styleBlock.module)
+          const styleRes = await compileStyleAsync({
+            ...(rawOptions?.style || {}),
+            id,
+            filename,
+            source: styleBlock.content,
+            // scoped: style.scoped,//not to support yet
+            modules: usedCSSModules,
+            preprocessLang: styleBlock.lang as any,
+            preprocessOptions: {
+              includePaths: ["src/styles", "node_modules", path.dirname(filename)],
+              importer: [
+                (url: string) => {
+                  const file = replaceRules(url)
+                  const modulePath = path.join(process.cwd(), "node_modules", file)
+                  if (fs.existsSync(modulePath)) return { file: modulePath }
+                  return { file }
+                }
+              ],
+              ...(rawOptions?.style?.preprocessOptions || {})
+            }
+          })
+
+          if (styleRes.errors.length) {
+            console.warn(styleRes.errors.map((e: any) => `${e}`).join("\n"))
+          }
+
+          if (usedCSSModules) {
+            const wxsModuleName = typeof styleBlock.module === "string"
+              ? styleBlock.module
+              : "$style"
+
+            cssModules[wxsModuleName] = {
+              ...(styleRes.modules || {})
+            }
+          }
+
+          cssCode += styleRes.code + `\n`
+        }
+
+        // handle template
         const template = descriptor.template?.content || ""
 
-        let { code: result, ast, errors } = compileTemplate(template, {
+        let { code: templateCode, ast, errors } = compileTemplate(template, {
           ...(rawOptions?.template || {}),
           id,
           isComponent,
+          cssModules,
           filename: args.path,
           cssVars: descriptor.cssVars || [],
           preprocessLang: descriptor.template?.lang
         })
 
         if (errors.length) {
-          result = ``
+          templateCode = ``
           for (const err of errors) {
             console.warn(`[x] ${err}`)
           }
@@ -201,12 +190,9 @@ export default function vuePlugin (rawOptions?: VueOptions): Plugin {
         }
 
         if (Boolean(wxs)) {
-          result = wxs + `\n` + result
+          templateCode = wxs + `\n` + templateCode
         }
 
-        emitFile(filename, EXTENSIONS.WXML, result)
-
-        let code = `export function render(){};`
         // cache asset urls used
         if (ast?.imports) {
           for (const imp of ast.imports) {
@@ -215,47 +201,16 @@ export default function vuePlugin (rawOptions?: VueOptions): Plugin {
           }
         }
 
-        return {
-          contents: code,
-          loader: "js"
-        }
-      })
-
-      build.onLoad({ filter: /.*/, namespace: "style" }, async (args) => {
-        const { descriptor, id, filename, index } = args.pluginData as PluginData
-
-        const style: SFCStyleBlock = descriptor.styles[index || 0]
-
-        const styleRes = await compileStyleAsync({
-          ...(rawOptions?.style || {}),
-          id,
-          filename,
-          source: style.content,
-          preprocessLang: style.lang as any,
-          preprocessOptions: {
-            includePaths: ["src/styles", "node_modules", path.dirname(filename)],
-            importer: [
-              (url: string) => {
-                const file = replaceRules(url)
-                const modulePath = path.join(process.cwd(), "node_modules", file)
-                if (fs.existsSync(modulePath)) return { file: modulePath }
-                return { file }
-              }
-            ],
-            ...(rawOptions?.style?.preprocessOptions || {})
-          }
-        })
-
-        if (styleRes.errors.length) {
-          console.warn(styleRes.errors.map((e: any) => `${e}`).join("\n"))
-        }
-
-        emitFile(filename, EXTENSIONS.WXSS, styleRes.code)
+        emitFile(filename, EXTENSIONS.JS, codeForEmit || ``)
+        emitFile(filename, EXTENSIONS.WXML, templateCode)
+        emitFile(filename, EXTENSIONS.WXSS, cssCode)
+        emitFile(filename, EXTENSIONS.JSON, JSON.stringify(config, null, 2))
 
         return {
-          contents: "",
-          loader: "css",
-          resolveDir: path.dirname(args.path)
+          contents: codeForBundle,
+          resolveDir: path.dirname(args.path),
+          loader: "ts",
+          watchFiles: [args.path]
         }
       })
     }

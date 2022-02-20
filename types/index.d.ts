@@ -46,7 +46,7 @@ export interface VueOptions {
   script?: Pick<SFCScriptCompileOptions, 'babelParserPlugins' | 'refSugar'>
   style?: Pick<
     SFCAsyncStyleCompileOptions,
-    'modulesOptions' | 'preprocessLang' | 'preprocessOptions' | 'postcssOptions' | 'postcssPlugins' | 'preprocessCustomRequire'
+    'modules' | 'modulesOptions' | 'preprocessLang' | 'preprocessOptions' | 'postcssOptions' | 'postcssPlugins' | 'preprocessCustomRequire'
   >
 }
 
