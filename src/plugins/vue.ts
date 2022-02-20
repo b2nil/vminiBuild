@@ -156,7 +156,7 @@ export default function vuePlugin (rawOptions?: VueOptions): Plugin {
             }
           }
 
-          cssCode += styleRes.code + `\n`
+          cssCode += styleRes.code.trim() + `\n`
         }
 
         // handle template
