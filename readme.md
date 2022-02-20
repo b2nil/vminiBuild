@@ -15,7 +15,7 @@
 
 - 开发依赖
   ```bash
-  yarn add -D vminiBuild esbuild @vue/compiler-sfc
+  yarn add -D vmini-build esbuild @vue/compiler-sfc
   ```
   - 如果使用 `pug` 或 css 预编译器，请自行安装依赖。
   - 如果需要 `px` 转 `rpx`, 请安装 [`postcss-pxtransform`](https://github.com/NervJS/taro/tree/next/packages/postcss-pxtransform)，或其他类似 `postcss` 插件。
