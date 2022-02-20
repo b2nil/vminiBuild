@@ -47,7 +47,7 @@ async function getUserBuildConfig (opts: CliOptions): Promise<UserConfig> {
   }
 
   if (!resolvedPath) {
-    console.warn(`config file vuemini.config.ts/js not found`)
+    console.warn(`config file mini.config.ts/js not found`)
     console.warn(`use default config`)
     return buildConfig
   }
@@ -161,7 +161,7 @@ export function run () {
   cli
     .option("-p, --platform [platform]", "[string] weapp | alipay | swan | tt", { default: "weapp" })
     .option("-l, --loglevel <level>", `[string] debug | warn`)
-    .option("-c, --config <configFilePath>", `[string] specify config file path, defualt: vuemini.config.ts/js`)
+    .option("-c, --config <configFilePath>", `[string] specify config file path, defualt: mini.config.ts/js`)
 
   cli
     .command("build")
