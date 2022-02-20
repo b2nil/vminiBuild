@@ -2,124 +2,291 @@
 > 配合 `@vue-mini/wechat` 使用的 `vue sfc` 编译器 + 脚手架
 > - 基于 `esbuild` 的脚手架
 > - 轻量 + 快速
+> - 只支持开发微信小程序
+> - 个人玩具，请谨慎使用
 
 ## 特性
-  - [x] vue 3 单文件组件语法
-    - [x] script setup
-    - [x] cssVars
-    - [x] cssModules
-    - [x] pug
-    - [x] css preprocess
-    - [x] postcss， 默认使用 `Taro` 的 `postcss-pxtransform`
   - [x] 基于 `esbuild` 的快速编译脚手架
-    - [x] 编译时宏函数，友好的类型提示和代码补全
+  - [x] vue 3 单文件组件语法
+  - [x] 编译时宏函数，友好的类型提示和代码补全
+  - [ ] 原生混合开发
+
+## 安装
+
+- 开发依赖
+  ```bash
+  yarn add -D vminiBuild esbuild @vue/compiler-sfc
+  ```
+  - 如果使用 `pug` 或 css 预编译器，请自行安装依赖。
+  - 如果需要 `px` 转 `rpx`, 请安装 [`postcss-pxtransform`](https://github.com/NervJS/taro/tree/next/packages/postcss-pxtransform)，或其他类似 `postcss` 插件。
+  
+- 项目依赖
+  - 请参考 [`vue-mini`](https://vuemini.org/guide/installation.html) 文档
+  - 以及 [`vue-mini` 脚手架模板](https://github.com/vue-mini/template) 的推荐
+
+
+## 使用
+
+#### 配置文件
+- 构建配置文件
+  - 默认使用 `mini.config.ts/js` 命名
+  - 可自行命名，然后在脚本中使用 `-c` 或 `--config` 指定配置文件位置, 如 `vmini build -c vite.config.ts`。
+    > Tips： 命名为 `vite.config.ts` 有图标
+  - 配置参数如下，其中：
+    - `platform` 和 `designWidth` 用于 `postcss-pxtransform`； 
+    - `aliases` 用于设置别名，如果不提供，别名默认使用 `tsconfig.json` 中的 `compilerOptions.paths`。明确设置为 `false`，禁用别名。
+    - `vue` 用于 vue 相关的编译设置，与 `@vue/compiler-sfc` 的配置基本相同，具体见 [`VueOptions`](./types/index.d.ts)；
+    - 其他均与 esbuild 的 `build` 配置相同，具体见 [`esbuild` 文档]([./types/index.d.ts](https://esbuild.github.io/api/#build-api))。
+    ```ts
+    interface UserConfig {
+      outDir?: string,
+      emptyOutDir?: boolean,
+      platform?: "weapp"
+      designWidth?: number
+      aliases?: false | Record<string, string>
+      watch?: BuildOptions["watch"]
+      minify?: BuildOptions["minify"]
+      define?: BuildOptions["define"]
+      logLevel?: BuildOptions["logLevel"],
+      plugins?: BuildOptions["plugins"],
+      vue?: VueOptions
+    }
+    ```
+  - 构建配置文件中必须使用 `cjs` 或 `esm` 格式默认导出配置：
+    ```ts
+    exports.default = {
+      outDir: "dist"
+    }
+    // 可直接使用 `defineBuildConfig` 来获得类型提示和代码补全, 无需引用
+    export default defineBuildConfig({
+      outDir: "dist"
+    })
+    ```
+- 项目配置和 sitemap 配置
+  - `project.config.json` 必须以 `js` 或 `ts` 格式提供，可使用宏函数 `defineProjectConfig` 来获得类型提示和代码补全。
+  - `sitemap.json`, 必须以 `js` 或 `ts` 格式提供，可使用宏函数 `defineSitemapConfig` 来获得类型提示和代码补全，放在 `src` 目录中。
+- 构建脚本：
+  ```json
+  {
+    "scripts": {
+      "dev": "vmini build -w",
+      "build": "vmini build"
+    }
+  }
+  ```
+
+#### 项目开发
+
+- 项目结构
+  ```bash
+  |-projectDir
+    |-src
+      |-assets
+      |-components
+      |-pages
+      |-app.config.ts   // app 配置文件，所有页面、组件的打包入口
+      |-app.css
+      |-app.ts          // app 入口
+      |-sitemap.ts      // sitemap 配置文件
+    |-package.json
+    |-tsconfig.json
+    |-project.config.ts // 小程序项目配置
+    |-mini.config.ts    // 构建配置文件
+  ```
+- app 入口, 详见 [`vue-mini` 文档](https://vuemini.org/guide/app.html)
+  ```ts
+  import { createApp } from '@vue-mini/wechat'
+  createApp({
+    setup(options) {
+      // options 为小程序启动参数
+    },
+  })
+  ```
+- app 配置文件
+  ```ts
+  // 语法不限，默认导出配置即可
+  export default {
+    pages: [],
+    subPackages: [],
+    window: {},
+    tabBar: {},
+    // ...
+  }
+  // 可使用直接使用 `defineAppConfig` 宏函数获取类型提示和代码补全
+  export default defineAppConfig({
+    // ...
+  })
+  ```
+- 页面文件, 详见 [`vue-mini` 文档](https://vuemini.org/guide/page.html)
+  - 采用 vue 单文件组件形式, 但不支持通过 `template`, `script`, `style` 的 `src` 属性引用其他文件
+  - 页面根据 app 配置中的 `pages` 和 `subPackages` 字段下的 pages 入口按需编译
+  - 语法基本与 vue 3.0 一致，增添了部分特性
+    - 编译时宏函数 `definePageConfig` 用于声明页面配置
+    - 使用 `script setup` 时
+      - 编译时宏函数 `defineProps`, 用于声明小程序组件声明 `properties`
+      - 编译时宏函数 `defineExpose`, 用于声明暴露给 `template` 和 `style` 的数据，作用如常规 `script` 中 `setup` 中 `return` 的数据
+      - 编译时宏函数 `defineHookConfig`, 用于声明[生命周期钩子](https://vuemini.org/guide/page.html#%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)的部分设置
+    - 使用 cssVars 特性时
+      - 生成的 css 变量会挂载到
+        - 页面文件： `page-meta` 的 `page-style` 中，如果没有 `page-meta`，则包裹一层 `page-meta`
+        - 组件文件： 首个节点的 `style` 中，如果是多节点，则包裹一层 `view`
+      - `script` 或 `script setup` 中必须将 `v-bind` 使用的参数明确通过 `setup` 函数的 `return` 或 `defineExpose` 暴露出来
+    - 使用 cssModules 特性时
+      - 使用 `<style module>` 时，默认的 module 名称为 `styles`，如：`<view :class="styles.className"/>`，请注意避免命名冲突
+      - 使用 `<style module="modName">` 时，使用具体声明的 module 名称，如：`<view :class="modName.className"/>`
+    - 不支持 `scoped` 样式
+  - 示例
+    - 常规写法
+      ```html
+      <template>
+        <view class="home">
+          <button :class="cssModule.btn">{{msg}}</button>
+          <view>{{wxs.msg}}<view>
+          <vue-comp/>
+        </view>
+      </template>
+      <wxs lang="ts" module="wxs">
+        var hi = "hello, vue-mini";
+        module.exports.msg = hi;
+      </wxs>
+      <script lnag="ts">
+      import { definePage, onPageScroll, ref } from '@vue-mini/wechat'
+      import VueComp from "@/components/VueComp.vue"
+
+      definePageConfig({
+        navigationBarTitleText: "Home"
+      })
+
+      export default definePage({
+        components: { VueComp },
+        setup() {
+          const msg = ref("click me")
+          const color = ref("#168")
+          const onClick = () => { msg.value = "clicked" }
+
+          onPageScroll(({ scrollTop }) => {
+            console.log('scrollTop:', scrollTop)
+          })
+
+          return {
+            msg,
+            color,
+            onClick
+          }
+        }
+      }, { listenPageScroll: true })
+      </script>
+      <style>
+        .home {
+          background-color: v-bind(color);
+        }
+      </style>
+      <style module="cssModule">
+        .btn {
+          color: red;
+        }
+      </style>
+      ```
+    - `script setup` 写法
+      ```html
+      <script setup lang="ts">
+      import { onPageScroll, ref } from '@vue-mini/wechat'
+      import VueComp from "@/components/VueComp.vue"
+
+      definePageConfig({
+        navigationBarTitleText: "script setup"
+      })
+
+      const msg = ref("click me")
+      const color = ref("#168")
+      const onClick = () => { msg.value = "clicked" }
+
+      onPageScroll(({ scrollTop }) => {
+        console.log('scrollTop:', scrollTop)
+      })
+
+      defineHookConfig({
+        listenPageScroll: true
+      })
+
+      defineExpose({
+        msg,
+        color,
+        onClick
+      })
+      </script>
+      <style>
+        .home {
+          background-color: v-bind(color);
+        }
+      </style>
+      <style module="cssModule">
+        .btn {
+          color: red;
+        }
+      </style>
+      ```
+- 组件文件，详见 [`vue-mini` 文档](https://vuemini.org/guide/component.html)
+  - 语法与组件语法一致
+  - 必须在 `definePageConfig` 明确声明 `component: true`
+  - 示例
+    ```html
+    <template>
+      <view class="home">
+        <button :class="cssModule.btn">{{msg}}</button>
+      </view>
+    </template>
+    <script setup lang="ts">
+      import { ref } from '@vue-mini/wechat'
+
+      definePageConfig({
+        component: true
+      })
+
+      defineProps({
+        prop: Number
+      })
+
+      const msg = ref("click me")
+      const color = ref("#168")
+      const onClick = () => { msg.value = "clicked" }
+
+      defineExpose({
+        msg,
+        color,
+        onClick
+      })
+      </script>
+    ```
 
 ## TODOs
-- [x] wrapp esbuild as a cli
-  - [x] esbuild config file
-    - [x] use `mini.config.ts/js` as default
-    - [x] use `-c, --config <filepath>` to specify a config file
-      - [x] use `vite.config.ts` for ide icon highlight
-    - [x] use `defineBuildConfig` for type suggests and code completion
-      - [x] use the same method adopted for project config macros
-- [x] compiler macros
-  - [x] use `@babel/parser` and `magic-string` from `@vue/compiler-sfc`
-    - [x] to minimize dependencies
-    - [x] and to maintain a reasonable speed
-  - [x] project, app and page config files
-    - [x] `defineProjectConfig`
-    - [x] `defineSitemapConfig`
-    - [x] `defineAppConfig`
-    - [x] `definePageConfig`
-    - [x] extract config from file
-      - [x] bundle with esbuild to a `cjs` output for requiring module from string
-      - [x] support `esm` and `cjs` syntaxes
-  - [x] script setup
-    - [x] inject css modules 
-    - [x] `defineProps` for props
-    - [x] `defineExpose` for setup returns
-    - [x] `defineHookConfig` for lifecycle hook configuration
-    - [ ] `defineEmits` ??
-- [x] alias imports
-  - [x] use alias setting from config file
-  - [x] or load from `tsconfig.json` 
-- [x] assets imports
-  - [x] assets used in app config file
-  - [x] assets using in template
-  - [ ] assets using in style
-- [x] entry plugins for esbuild
-  - [x] `app.ts/js`
-  - [x] `app.config.ts/js`
-    - [x] warn if `app.config.ts/js` not exist
-    - [x] extract app config from file
-    - [x] emit app config file
-    - [x] bundling all `.vue` entries into this config file
-      - [ ] import `.vue` components as global components?
-      - [x] import pages
-      - [x] import subpackage pages
-      - [x] import component entries
-  - [x] `project.config.ts/js`
-  - [x] `sitemap.ts/js`
-- [x] `plugin-vue` for esbuild
-  - [ ] `wxs` support, using custom block
-    - [x] `<wxs lang="ts" module="mod"></wxs>`, using `lang` for syntax highlighting
-    - [x] directly prepend to `wxml`
-    - [ ] `wxs` block with `src` attr
-  - [ ] template transforms
-    - [ ] h5 tag transform
-    - [x] directives transforms
-      - [x] `v-model`, change to events?
-      - [x] `v-on`
-      - [x] `v-if`
-      - [x] `v-for`
-      - [x] `v-show`
-      - [ ] `v-slot`
-        - [ ] special use cases
-      - [x] `v-bind`
-        - [x] normal bindings
-        - [ ] style bindings
-        - [ ] class bindings
-      - [x] cssVars transforms
-        - [x] mark template as a `page` or a `component` for cssVars transforms
-          - [x] using `definePageConfig`'s `component` option
-        - [x] page
-          - [x] use `page-meta` to wrap a page for fragments
-          - [x] bind cssVars to `page-meta`'s `page-style`
-          - [x] merge cssVars to `page-meta`'s `page-style` if `page-meta` already exist
-        - [x] component
-          - [x] single root: bind cssVars to root element's `style`
-          - [x] fragments: wrap with `view` for cssVars binding
-      - [ ] asset url transforms
-          - [ ] serve locally if `useCDN` is enabled
-          - [x] cache files and directly copy to `dist`
-      - [x] not to support `template` with `src` attr, use component instead
-  - [ ] script
-    - [x] not to support `script` with `src` attr, use import instead 
-    - [x] cssVars shall be returned in `setup`
-    - [x] script setup transform
-      - [x] `definePageConfig` for properties
-      - [x] `defineProps` for properties
-      - [x] `defineExpose` for setup returns and cssVars
-      - [x] `defineHookConfig` for lifecycle hook configuration
-    - [ ] native component imports using `usingComponent`
-      - [ ] local components :-> cache directory and directly copy to `dist`
-      - [ ] third party libs :-> cache module name for bundling to `miniprogram_npm`
-    - [x] sfc component imports by analysing `.vue` import declaration
-    - [ ] extend `definePage` and `defineComponent` definition to allow `components` option to avoid type check error
-  - [ ] style
-    - [x] global style
-    - [x] style imports
-    - [x] style preprocess
-    - [x] style postprocess, support Taro's `postcss-pxtransform` by default
-    - [x] style cssVars, using `v-bind`
-      - [x] variables shall be returned in setup option 
-      - [x] or shall be exposed by `defineExpose` in script setup
-    - [x] postcss transform
-      - [x] px -> rpx, directly use Taro's postcss plugin
-      - [ ] url transforms
+- [ ] `wxs` block with `src` attr
+- [ ] script setup
+  - [ ] `defineEmits` ??
+- [ ] template transforms
+  - [ ] h5 tag transform
+  - [ ] directives transforms
+    - [x] `v-model`, change to events?
+    - [ ] `v-slot`
+      - [ ] special use cases
+    - [x] `v-bind`
+      - [ ] style bindings
+      - [ ] class bindings
+    - [ ] asset url transforms
         - [ ] serve locally if `useCDN` is enabled
-        - [ ] convert to base64 if not
-    - [x] style module
-    - [ ] style scoped
-      - [ ] mini-app does not support `btn[data-v-xxx]`, possible implementation is to convert to `.btn.data-v-xxx` and add `data-v-xxx` to every element with `class` attr
+- [ ] native page and components bundling
+  - [ ] native pages and subpackage pages
+  - [ ] components
+    - [ ] local components
+      - [ ] cache directory and directly copy to `dist`
+    - [ ] third party libs
+      - [ ] cache module name for bundling to `miniprogram_npm` 
+- [ ] global components 
+  - [ ] import `.vue` components ?
+  - [ ] native component imports using `usingComponent`    
+- [ ] style
+  - [ ] postcss transform
+    - [ ] serve url locally if `useCDN` is enabled
+    - [ ] or convert url to base64 if not
+- [ ] extend `definePage` and `defineComponent` definition to allow `components` option to avoid type check error
 - [ ] mini-app tag.d.ts for volar syntax highlighting
