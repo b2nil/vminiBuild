@@ -3,7 +3,8 @@ import fs from "fs"
 import {
   appConfigREG, appREG, emitFile, externals, isTS,
   normalizePath, resolveImports, loadRules, styleExts,
-  cacheAssetPath, configCache, DEFINE, extractConfigFromFile
+  cacheAssetPath, configCache, DEFINE,
+  extractConfigFromFile, getNativeImportsHelperCode
 } from '../utils'
 import { cacheAppRelatedConfigs } from "./cache"
 import {
@@ -126,6 +127,12 @@ export default function vueminiPlugin (options: UserConfig = {}): Plugin {
         })
 
         let contents = pages.map((p) => `import "${p}";`).join("\n")
+
+        // check native components
+        contents += "\n" + await getNativeImportsHelperCode(
+          appConfig,
+          path.join(pluginData.projectDir, args.path)
+        )
 
         // check app style
         styleExts.forEach(ext => {

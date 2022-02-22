@@ -21,7 +21,7 @@ export async function emitUtilsChunks (esbuild: PluginBuild["esbuild"], options:
     splitting: true,
     watch: options.watch,
     minify: options.minify,
-    incremental: true,
+    // incremental: true,
     metafile: true,
     color: true,
   })
@@ -47,7 +47,7 @@ export async function emitModuleChunks (esbuild: PluginBuild["esbuild"], options
     chunkNames: 'chunks/[name]-[hash]',
     bundle: true,
     splitting: true,
-    incremental: true,
+    // incremental: true,
     metafile: true,
     color: true,
     watch: options.watch,
@@ -106,14 +106,32 @@ export async function emitJSONFiles (
 export async function copyAssets () {
   Array.from(assetsCache).forEach(async (src) => {
     const dest = src.replace(/(\\|\/)?src((\\|\/))/, "dist")
-    if (fs.existsSync(src) && !fs.existsSync(dest)) {
+    if (fs.existsSync(src) && (await fs.promises.lstat(src)).isDirectory()) {
+      await copyDir(src, dest)
+    } else if (fs.existsSync(src) && !fs.existsSync(dest)) {
       try {
-        fs.mkdirSync(path.dirname(dest), { recursive: true })
-        fs.copyFileSync(src, dest)
+        await fs.promises.mkdir(path.dirname(dest), { recursive: true })
+        await fs.promises.copyFile(src, dest)
       } catch (error) {
         console.warn(error)
       }
     }
   })
+}
+
+export async function copyDir (src: string, dest: string) {
+  const entries = await fs.promises.readdir(src, { withFileTypes: true })
+  if (!fs.existsSync(dest)) {
+    await fs.promises.mkdir(dest)
+  }
+  for (let entry of entries) {
+    const srcPath = path.join(src, entry.name)
+    const destPath = path.join(dest, entry.name)
+    if (entry.isDirectory()) {
+      await copyDir(srcPath, destPath)
+    } else {
+      await fs.promises.copyFile(srcPath, destPath)
+    }
+  }
 }
 

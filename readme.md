@@ -9,7 +9,7 @@
   - [x] 基于 `esbuild` 的快速编译脚手架
   - [x] vue 3 单文件组件语法
   - [x] 编译时宏函数，友好的类型提示和代码补全
-  - [ ] 原生混合开发
+  - [x] 原生混合开发
 
 ## 安装
 
@@ -134,6 +134,7 @@
     - 使用 cssModules 特性时
       - 使用 `<style module>` 时，默认的 module 名称为 `styles`，如：`<view :class="styles.className"/>`，请注意避免命名冲突
       - 使用 `<style module="modName">` 时，使用具体声明的 module 名称，如：`<view :class="modName.className"/>`
+    - 支持原生混合开发
     - 不支持 `scoped` 样式
   - 示例
     - 常规写法
@@ -151,10 +152,16 @@
       </wxs>
       <script lnag="ts">
       import { definePage, onPageScroll, ref } from '@vue-mini/wechat'
+      // `.vue` 组件引用可按照 vue 的语法应用
+      // 亦可在 `definePageConfig` 通过 `usingComponents` 引用，但必须带 `.vue` 扩展名
       import VueComp from "@/components/VueComp.vue"
 
       definePageConfig({
-        navigationBarTitleText: "Home"
+        navigationBarTitleText: "Home",
+        usingComponents: {
+          // "vue-comp": "@/components/VueComp.vue" // `.vue` 组件
+          // "native-comp": "@/components/NativeComp" // 原生组件
+        }
       })
 
       export default definePage({
@@ -260,7 +267,6 @@
     ```
 
 ## TODOs
-- [ ] `wxs` block with `src` attr
 - [ ] script setup
   - [ ] `defineEmits` ??
 - [ ] template transforms
@@ -275,15 +281,9 @@
     - [ ] asset url transforms
         - [ ] serve locally if `useCDN` is enabled
 - [ ] native page and components bundling
-  - [ ] native pages and subpackage pages
   - [ ] components
-    - [ ] local components
-      - [ ] cache directory and directly copy to `dist`
     - [ ] third party libs
       - [ ] cache module name for bundling to `miniprogram_npm` 
-- [ ] global components 
-  - [ ] import `.vue` components ?
-  - [ ] native component imports using `usingComponent`    
 - [ ] style
   - [ ] postcss transform
     - [ ] serve url locally if `useCDN` is enabled

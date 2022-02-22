@@ -3,10 +3,15 @@ import fs from "fs"
 import path from "path"
 import {
   cacheAssetPath,
+  cacheUtilsImports,
   emitFile,
   externals,
   getFullPath,
   replaceRules,
+  EXTENSIONS,
+  getNativeImportsHelperCode,
+  getRegExpMatchedCode,
+  reqREG
 } from '../utils'
 import {
   parse,
@@ -18,17 +23,9 @@ import {
 import type { Plugin } from "esbuild"
 import type { PageConfig, TransformResult, VueOptions } from "types"
 import type {
-  SFCDescriptor,
   SFCBlock,
   SFCStyleBlock
 } from "@vue/compiler-sfc"
-
-enum EXTENSIONS {
-  WXML = ".wxml",
-  JSON = ".json",
-  WXSS = ".wxss",
-  JS = ".js"
-}
 
 // interface PluginData {
 //   descriptor: SFCDescriptor
@@ -101,10 +98,22 @@ export default function vuePlugin (rawOptions?: VueOptions): Plugin {
         if (descriptor.scriptSetup || descriptor.script) {
           const ret: TransformResult = {}
           const script = compileScript(descriptor, ret)
+
+          // cache non-vue imports to build separately
+          const imports = script.imports
+          if (imports) {
+            for (let imp of Array.from(imports)) {
+              imp = path.resolve(path.dirname(filename), imp)
+              if (!imp.endsWith(".vue")) cacheUtilsImports(imp)
+            }
+          }
+
           config = script.config || {}
           isComponent = Boolean(config.component)
 
           codeForBundle += script.code || ``
+          const nativeImportsCode = await getNativeImportsHelperCode(config, filename)
+          codeForBundle += "\n" + nativeImportsCode
           // post tranform
           // - to remove .vue imports and .vue components option
           // - to transform props to properties
@@ -184,9 +193,17 @@ export default function vuePlugin (rawOptions?: VueOptions): Plugin {
         const wxsBlock = getWxsBlock(descriptor.customBlocks)
         if (wxsBlock) {
           const m = wxsBlock.attrs.module
-          wxs += `<wxs module="${m}">\n`
-          wxs += wxsBlock.content.trim()
-          wxs += `\n</wxs>`
+          const wxsSrc = wxsBlock.attrs.src
+          const wxsSource = wxsBlock.content.trim()
+          if (Boolean(wxsSource)) {
+            wxs += `<wxs module="${m}">\n`
+            wxs += wxsSource
+            wxs += `\n</wxs>`
+            codeForBundle += "\n" + getRegExpMatchedCode(wxsSource, reqREG)
+          } else if (Boolean(wxsSrc) && wxsSrc !== true) {
+            wxs += `<wxs module="${m}" src="${wxsSrc}">\n`
+            codeForBundle += "\n" + `import "${wxsSrc}";`
+          }
         }
 
         if (Boolean(wxs)) {

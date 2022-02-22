@@ -7,6 +7,7 @@ import {
   printStats,
   vuePlugin,
   styleLoader,
+  nativePlugin,
   vueminiPlugin,
 } from "./plugins"
 
@@ -118,6 +119,7 @@ async function initBuildOptions (userOptions: UserConfig): Promise<BuildOptions>
       }),
       vuePlugin(userOptions.vue),
       styleLoader(userOptions.vue),
+      nativePlugin(userOptions.vue),
       ...(userOptions.plugins || [])
     ]
   }

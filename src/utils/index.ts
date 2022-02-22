@@ -2,6 +2,7 @@ export * from "./cache"
 export * from "./paths"
 export * from "./config"
 export * from "./utils"
+export * from "./helper"
 
 export const enum DEFINE {
   PROPS = "defineProps",

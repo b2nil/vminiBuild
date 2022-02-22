@@ -6,6 +6,14 @@ import { moduleImportsCache, utilsImportsCache } from './cache'
 
 import type { OnResolveArgs, PluginBuild } from "esbuild"
 
+export enum EXTENSIONS {
+  WXML = ".wxml",
+  JSON = ".json",
+  WXSS = ".wxss",
+  JS = ".js",
+  WXS = ".wxs"
+}
+
 export const __PROD__ = process.env.NODE_ENV === "production"
 export const appREG = /app\.(t|j)sx?$/
 export const appConfigREG = /app\.config\.(t|j)sx?$/
