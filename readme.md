@@ -89,9 +89,23 @@
       |-app.ts          // app 入口
       |-sitemap.ts      // sitemap 配置文件
     |-package.json
-    |-tsconfig.json
+    |-tsconfig.json     // 需设置 `typeRoots` 和 `types` 字段
     |-project.config.ts // 小程序项目配置
     |-mini.config.ts    // 构建配置文件
+  ```
+- `tsconfig.json` 和 `jsconfig.json` 设置
+  > 请添加以下设置，以便充分利用编译时宏函数
+  ```json
+  {
+    "compilerOptions": {
+      "typeRoots": [
+        "node_modules/vmini-build/types"
+      ],
+      "types": [
+        "vmini-build"
+      ]
+    }
+  }
   ```
 - app 入口, 详见 [`vue-mini` 文档](https://vuemini.org/guide/app.html)
   ```ts
@@ -290,3 +304,6 @@
     - [ ] or convert url to base64 if not
 - [ ] extend `definePage` and `defineComponent` definition to allow `components` option to avoid type check error
 - [ ] mini-app tag.d.ts for volar syntax highlighting
+
+## 关于 `vue-mini`
+> [`vue-mini`](https://vuemini.org/) 是一个基于 `@vue/reactivity` 且非常`轻量`的小程序<u>**纯运行时**</u>库（目前仅支持微型小程序），仅聚焦于小程序逻辑部分，支持使用 vue 的 `Composition API` 语法以及与小程序原生语法协同工作。如果大家希望 `vue-mini` 增加更多特性，可考虑[赞助](https://vuemini.org/guide/sponsor.html)其[作者](https://github.com/yangmingshan)。
