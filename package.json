@@ -12,8 +12,13 @@
     "types",
     "bin"
   ],
-  "author": "b2nil",
+  "author": "Ken Ho <b2nil>",
   "license": "MIT",
+  "homepage": "https://github.com/b2nil/vminiBuild",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:b2nil/vminiBuild.git"
+  },
   "scripts": {
     "dev": "esbuild src/index.ts --outfile=dist/index.js --format=cjs --platform=node --tree-shaking=true --external:esbuild --external:url --external:pug --external:postcss-pxtransform --external:@vue/* --bundle",
     "build": "yarn dev --minify",
