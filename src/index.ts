@@ -66,7 +66,6 @@ async function getUserBuildConfig (opts: CliOptions): Promise<UserConfig> {
 }
 
 async function initBuildOptions (userOptions: UserConfig): Promise<BuildOptions> {
-
   userOptions.vue = {
     ...(userOptions.vue || {}),
     style: {
@@ -100,7 +99,7 @@ async function initBuildOptions (userOptions: UserConfig): Promise<BuildOptions>
     splitting: true,
     define: {
       ...(userOptions.define || {}),
-      "__PLATFORM__": `${userOptions.platform || 'weapp'}`
+      "process.env.__PLATFORM__": userOptions.platform || 'weapp'
     },
     watch: !userOptions.watch ? false : {
       onRebuild (error, _res) {

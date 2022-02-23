@@ -20,5 +20,8 @@ const compileVue = async (src: string) => {
 }
 
 it.concurrent("should transform normal script", async () => {
-  const code = await compileVue("./tests/plugins/vue/test.vue")
+  expect.assertions(1)
+  console.warn = jest.fn()
+  await compileVue("./tests/plugins/vue/test.vue")
+  expect(console.warn).toHaveBeenCalled()
 })

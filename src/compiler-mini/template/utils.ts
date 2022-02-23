@@ -1,4 +1,4 @@
-const platformDirMap = {
+const platformDirMap: Record<string, string> = {
   weapp: "wx",
   swan: "s",
   alipay: "a",
@@ -6,7 +6,7 @@ const platformDirMap = {
   jd: "jd",
 }
 
-export const __DIR = platformDirMap["weapp"]
+export const __DIR = platformDirMap[process.env.__PLATFORM__!]
 
 export const eventMap: Record<string, string> = {
   click: "tap"

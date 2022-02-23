@@ -80,5 +80,10 @@ declare global {
   const defineBuildConfig: (config: UserConfig) => UserConfig
   const defineProjectConfig: (projectConfig: ProjectConfig) => ProjectConfig
   const defineSitemapConfig: (sitemapConfig: SitemapConfig) => SitemapConfig
-  var __PLATFORM__: 'weapp' | 'swan' | 'alipay' | 'tt' | 'jd'
+}
+
+declare namespace NodeJS {
+  interface ProcessEnv {
+    __PLATFORM__: 'weapp' | 'swan' | 'alipay' | 'tt' | 'jd'
+  }
 }

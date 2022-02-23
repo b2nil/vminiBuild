@@ -1,8 +1,10 @@
 module.exports = {
   testEnvironment: "jsdom",
-  setupFilesAfterEnv: [],
+  setupFiles: [
+    "<rootDir>/tests/setup.ts"
+  ],
   globals: {
-    __PLATFORM__: "weapp"
+    "process.env.__PLATFORM__": "weapp"
   },
   moduleFileExtensions: ["js", "ts"],
   transform: {

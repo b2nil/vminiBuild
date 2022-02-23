@@ -37,6 +37,6 @@
   },
   "include": [
     "src",
-    "types",
+    "types"
   ]
 }

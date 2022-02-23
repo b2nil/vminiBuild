@@ -56,11 +56,6 @@ export default function vuePlugin (rawOptions?: VueOptions): Plugin {
   return {
     name: "vuemini:vue",
     async setup (build) {
-      build.initialOptions.define = {
-        ...build.initialOptions.define,
-        "__PLATFORM__": "'weapp'"
-      }
-
       build.onResolve({ filter: /\.vue/ }, async (args) => {
         if (/\.vue$/.test(args.path)) {
           return {
