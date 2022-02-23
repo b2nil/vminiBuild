@@ -196,7 +196,7 @@ export default function vuePlugin (rawOptions?: VueOptions): Plugin {
             wxs += `\n</wxs>`
             codeForBundle += "\n" + getRegExpMatchedCode(wxsSource, reqREG)
           } else if (Boolean(wxsSrc) && wxsSrc !== true) {
-            wxs += `<wxs module="${m}" src="${wxsSrc}">\n`
+            wxs += `<wxs module="${m}" src="${wxsSrc}"/>\n`
             codeForBundle += "\n" + `import "${wxsSrc}";`
           }
         }
