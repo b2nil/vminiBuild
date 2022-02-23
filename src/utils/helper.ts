@@ -36,7 +36,7 @@ export async function getNativeImportsHelperCode (config: PageConfig | AppConfig
 
   let code = ``
 
-  for (const [_c, nativePath] of Object.entries(config.usingComponents)) {
+  for (const [compName, nativePath] of Object.entries(config.usingComponents)) {
     let deAliased = replaceRules(nativePath)
 
     if (deAliased !== nativePath) {
@@ -46,6 +46,7 @@ export async function getNativeImportsHelperCode (config: PageConfig | AppConfig
 
       deAliased = path.relative(path.dirname(filename), deAliased)
       deAliased = deAliased.replace(/\\/g, "/")
+      config.usingComponents[compName] = deAliased.replace(/\.vue$/, "")
     }
 
     if (deAliased.endsWith(".vue")) {

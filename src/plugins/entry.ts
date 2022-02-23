@@ -94,7 +94,6 @@ export default function vueminiPlugin (options: UserConfig = {}): Plugin {
         }
 
         const configOutfile = path.join(pluginData.projectDir, "dist/app.json")
-        await emitFile(configOutfile, ".json", JSON.stringify(appConfig, null, 2))
 
         const pages: string[] = []
         appConfig.pages.forEach((page, _index) => {
@@ -142,6 +141,8 @@ export default function vueminiPlugin (options: UserConfig = {}): Plugin {
             return
           }
         })
+
+        await emitFile(configOutfile, ".json", JSON.stringify(appConfig, null, 2))
 
         return {
           contents: contents,
