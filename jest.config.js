@@ -3,9 +3,6 @@ module.exports = {
   setupFiles: [
     "<rootDir>/tests/setup.ts"
   ],
-  globals: {
-    "process.env.__PLATFORM__": "weapp"
-  },
   moduleFileExtensions: ["js", "ts"],
   transform: {
     "^.+\\.tsx?$": "esbuild-jest",
