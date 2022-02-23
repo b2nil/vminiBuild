@@ -26,6 +26,7 @@ import type {
   SFCBlock,
   SFCStyleBlock
 } from "@vue/compiler-sfc"
+import { getPlatformDirective } from '@/compiler-mini/template'
 
 // interface PluginData {
 //   descriptor: SFCDescriptor
@@ -165,12 +166,13 @@ export default function vuePlugin (rawOptions?: VueOptions): Plugin {
 
         // handle template
         const template = descriptor.template?.content || ""
-
-        let { code: templateCode, ast, errors } = compileTemplate(template, {
+        const platformDir = getPlatformDirective(process.env.__PLATFORM__ || "weapp")
+        let { code: templateCode, ast, errors } = await compileTemplate(template, {
           ...(rawOptions?.template || {}),
           id,
           isComponent,
           cssModules,
+          platformDir,
           filename: args.path,
           cssVars: descriptor.cssVars || [],
           preprocessLang: descriptor.template?.lang

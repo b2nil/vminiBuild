@@ -42,16 +42,19 @@ function preprocess (
   return res
 }
 
-export function compileTemplate (
+export { getPlatformDirective } from "./utils"
+
+export async function compileTemplate (
   template: string,
   options: VueOptions["template"] & {
     filename: string,
     id: string,
     cssVars: string[],
     isComponent?: boolean,
-    cssModules: Record<string, Record<string, string>>
+    cssModules: Record<string, Record<string, string>>,
+    platformDir: string
   }
-): SFCTemplateCompileResults {
+): Promise<SFCTemplateCompileResults> {
   const errors: CompilerError[] = []
   const warnings: CompilerError[] = []
   const preprocessLang = options?.preprocessLang
@@ -91,13 +94,13 @@ export function compileTemplate (
     nodeTransforms: [
       ...(options?.compilerOptions?.nodeTransforms || []),
       transformCssModuleClasses(options.cssModules),
-      transformSyntax,
+      transformSyntax(options.platformDir),
       transformAssetUrls(assetOptions),
       transformStyleWithCssVars(options.id, options.cssVars, options.isComponent),
     ]
   })
 
-  const code = stringifyNodes(ast.children, ast as unknown as ElementNode)
+  const code = stringifyNodes(ast.children, ast as unknown as ElementNode, options.platformDir)
 
   return {
     code,

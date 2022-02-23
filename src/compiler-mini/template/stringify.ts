@@ -1,5 +1,4 @@
 import { isString, isSymbol } from "@vue/shared"
-import { __DIR } from './utils'
 
 import type {
   TextNode,
@@ -27,7 +26,8 @@ const containsEls = (node: ElementNode) => {
 // Recursively stringify vue template ast
 export function stringifyNodes (
   nodes: TemplateChildNode[],
-  parent: ElementNode
+  parent: ElementNode,
+  platformDir: string
 ) {
   let res = ""
   const hasEls = containsEls(parent)
@@ -38,7 +38,7 @@ export function stringifyNodes (
     switch (node.type) {
       case 1 as NodeTypes.ELEMENT:
         res += indent(indentLevel - 1)
-        res += stringifyElement(node)
+        res += stringifyElement(node, platformDir)
         break
       case 2 as NodeTypes.TEXT:
         if (hasEls)
@@ -77,6 +77,7 @@ export function stringifyNodes (
 
 function stringifyElement (
   node: ElementNode,
+  platformDir: string
 ): string {
   let res = ""
   let endBrkt = node.isSelfClosing ? `/>${lineBreak}` : `>`
@@ -84,10 +85,10 @@ function stringifyElement (
 
   res += `<${node.tag}`
   if (node.props.length) {
-    res += ` ${stringifyProps(node.props)}`
+    res += ` ${stringifyProps(node.props, platformDir)}`
   }
   res += endBrkt
-  res += stringifyNodes(node.children, node)
+  res += stringifyNodes(node.children, node, platformDir)
 
   if (!node.isSelfClosing) {
     if (!containsEls(node)) {
@@ -102,14 +103,14 @@ function stringifyElement (
   return res
 }
 
-function stringifyProps (props: (AttributeNode | DirectiveNode)[]) {
+function stringifyProps (props: (AttributeNode | DirectiveNode)[], platformDir: string) {
   return props
     .map(p => {
       switch (p.type) {
         case 6 as NodeTypes.ATTRIBUTE:
           return stringifyAttribute(p)
         case 7 as NodeTypes.DIRECTIVE:
-          return stringifyDirective(p)
+          return stringifyDirective(p, platformDir)
       }
     })
     .join(" ")
@@ -123,7 +124,7 @@ function stringifyAttribute (p: AttributeNode): string {
   return res
 }
 
-function stringifyDirective (dir: DirectiveNode): string {
+function stringifyDirective (dir: DirectiveNode, platformDir: string): string {
   const arg = stringifyExpr(dir.arg!)
   if (!dir.exp) {
     return arg
@@ -132,7 +133,7 @@ function stringifyDirective (dir: DirectiveNode): string {
   const exp = stringifyExpr(dir.exp)
   let isStatic = (dir.exp as SimpleExpressionNode).isStatic
 
-  if (arg === `${__DIR}:key`) {
+  if (arg === `${platformDir}:key`) {
     isStatic = true
   }
 

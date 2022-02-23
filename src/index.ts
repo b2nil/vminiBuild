@@ -99,7 +99,7 @@ async function initBuildOptions (userOptions: UserConfig): Promise<BuildOptions>
     splitting: true,
     define: {
       ...(userOptions.define || {}),
-      "process.env.__PLATFORM__": userOptions.platform || 'weapp'
+      "process.env.__PLATFORM__": JSON.stringify(userOptions.platform || "weapp")
     },
     watch: !userOptions.watch ? false : {
       onRebuild (error, _res) {
@@ -132,6 +132,9 @@ async function buildWithEsbuild (options: CliOptions) {
   if (options.p || options.platform) {
     userConfig.platform = options.p || options.platform
   }
+
+  process.env.__PLATFORM__ = userConfig.platform || 'weapp'
+
   userConfig.watch = options.w || options.watch
   userConfig.logLevel = options.l || options.logLevel
   userConfig.emptyOutDir = options.emptyOutDir || userConfig.emptyOutDir

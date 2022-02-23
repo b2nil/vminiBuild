@@ -6,17 +6,12 @@ const platformDirMap: Record<string, string> = {
   jd: "jd",
 }
 
-export const __DIR = platformDirMap[process.env.__PLATFORM__!]
+export const getPlatformDirective = (p: string) => {
+  return platformDirMap[p] || platformDirMap["weapp"]
+}
 
 export const eventMap: Record<string, string> = {
   click: "tap"
-}
-
-export const directivesMap: Record<string, string> = {
-  if: `${__DIR}:if`,
-  "else-if": `${__DIR}:elif`,
-  else: `${__DIR}:else`,
-  show: "hidden"
 }
 
 export const eventModifiers: Record<string, string> = {

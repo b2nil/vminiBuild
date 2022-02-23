@@ -5,7 +5,7 @@ import {
 } from '@vue/compiler-core'
 import { stringifyExpr } from '../stringify'
 import { genDirNode, genSimpleExpr } from '../ast'
-import { directivesMap, eventMap, getEventModifier, __DIR } from '../utils'
+import { eventMap, getEventModifier } from '../utils'
 
 import type {
   NodeTypes,
@@ -21,30 +21,33 @@ import type {
 // TODO: handle slot
 // TODO: 小程序中 wx:else wx:elif 不支持与 wx:for 同时使用
 //       if 需要补充一层 block
-export const transformSyntax: NodeTransform = (node, context) => {
-  if (node.type === 1 as NodeTypes.ELEMENT) {
-    for (const prop of node.props) {
-      if (prop.type === 7 as NodeTypes.DIRECTIVE) {
-        switch (prop.name) {
-          case "on":
-            transformOn(prop)
-            break
-          case "if":
-          case "else-if":
-          case "else":
-          case "show":
-            transformConditionals(node, prop, context)
-            break
-          case "for":
-            transformFor(node, prop)
-            break
-          case "model":
-            transformModel(prop)
-            break
-          case "slot":
-            // TODO: transform slot cases
-            transformSlot(node, prop)
-            break
+export function transformSyntax (platformDir: string): NodeTransform {
+
+  return (node, context) => {
+    if (node.type === 1 as NodeTypes.ELEMENT) {
+      for (const prop of node.props) {
+        if (prop.type === 7 as NodeTypes.DIRECTIVE) {
+          switch (prop.name) {
+            case "on":
+              transformOn(prop)
+              break
+            case "if":
+            case "else-if":
+            case "else":
+            case "show":
+              transformConditionals(node, prop, context, platformDir)
+              break
+            case "for":
+              transformFor(node, prop, platformDir)
+              break
+            case "model":
+              transformModel(prop)
+              break
+            case "slot":
+              // TODO: transform slot cases
+              transformSlot(node, prop)
+              break
+          }
         }
       }
     }
@@ -67,8 +70,16 @@ function transformOn (prop: DirectiveNode) {
 function transformConditionals (
   node: ElementNode,
   prop: DirectiveNode,
-  ctx: TransformContext
+  ctx: TransformContext,
+  platformDir: string
 ) {
+  const directivesMap: Record<string, string> = {
+    if: `${platformDir}:if`,
+    "else-if": `${platformDir}:elif`,
+    else: `${platformDir}:else`,
+    show: "hidden"
+  }
+
   prop.arg = genSimpleExpr(
     prop,
     directivesMap[prop.name],
@@ -149,53 +160,53 @@ const genSlotArgExpr = (arg: ExpressionNode) => {
   )
 }
 
-function transformFor (node: ElementNode, prop: DirectiveNode) {
+function transformFor (node: ElementNode, prop: DirectiveNode, platfirmDir: string) {
   const args = stringifyExpr(prop.exp!).split(/ (in|of) /g)
   const [forItemIdx, _, forObj] = args;
   (prop.exp as SimpleExpressionNode).content = forObj
 
-  prop.arg = genSimpleExpr(prop, `${__DIR}:for`, true, 3, `${__DIR}:for`)
+  prop.arg = genSimpleExpr(prop, `${platfirmDir}:for`, true, 3, `${platfirmDir}:for`)
 
   if (/\(.+\)/.test(forItemIdx)) {
     const [item, idx] = forItemIdx.replace(/\(|\)/g, "").split(/, ?/)
     node.props.push(genDirNode(
       prop,
-      `${__DIR}:for-item`,
+      `${platfirmDir}:for-item`,
       genSimpleExpr(prop, item, true, 3, item),
-      genSimpleExpr(prop, `${__DIR}:for-item`, true, 3, `${__DIR}:for-item`),
+      genSimpleExpr(prop, `${platfirmDir}:for-item`, true, 3, `${platfirmDir}:for-item`),
       [],
-      `${__DIR}:for-item="${item}"`
+      `${platfirmDir}:for-item="${item}"`
     ))
     node.props.push(genDirNode(
       prop,
-      `${__DIR}:for-index`,
+      `${platfirmDir}:for-index`,
       genSimpleExpr(prop, idx, true, 3, idx),
-      genSimpleExpr(prop, `${__DIR}:for-index`, true, 3, `${__DIR}:for-index`),
+      genSimpleExpr(prop, `${platfirmDir}:for-index`, true, 3, `${platfirmDir}:for-index`),
       [],
-      `${__DIR}:for-index="${idx}"`
+      `${platfirmDir}:for-index="${idx}"`
     ))
   } else {
     node.props.push(genDirNode(
       prop,
-      `${__DIR}:for-item`,
+      `${platfirmDir}:for-item`,
       genSimpleExpr(prop, forItemIdx, true, 3, forItemIdx),
-      genSimpleExpr(prop, `${__DIR}:for-item`, true, 3, `${__DIR}:for-item`),
+      genSimpleExpr(prop, `${platfirmDir}:for-item`, true, 3, `${platfirmDir}:for-item`),
       [],
-      `${__DIR}:for-item="${forItemIdx}"`
+      `${platfirmDir}:for-item="${forItemIdx}"`
     ))
   }
 
   const p = findProp(node, "key", true)
   if (p && p.type === 7 as NodeTypes.DIRECTIVE) {
-    (p.arg as SimpleExpressionNode).content = `${__DIR}:key`
+    (p.arg as SimpleExpressionNode).content = `${platfirmDir}:key`
   } else {
     node.props.push(genDirNode(
       prop,
-      `${__DIR}:key`,
+      `${platfirmDir}:key`,
       genSimpleExpr(prop, "*this", true, 3, "*this"),
-      genSimpleExpr(prop, `${__DIR}:key`, true, 3, `${__DIR}:key`),
+      genSimpleExpr(prop, `${platfirmDir}:key`, true, 3, `${platfirmDir}:key`),
       [],
-      `${__DIR}:key="*this"`
+      `${platfirmDir}:key="*this"`
     ))
   }
 }
