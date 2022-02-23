@@ -292,9 +292,10 @@
     - [x] `v-bind`
       - [ ] style bindings
       - [ ] class bindings
-    - [ ] asset url transforms
-        - [ ] serve locally if `useCDN` is enabled
+    - [x] asset url transforms
+        - [x] serve locally if `useCDN` is enabled
 - [ ] native page and components bundling
+  - [ ] native template asset url transform
   - [ ] components
     - [ ] third party libs
       - [ ] cache module name for bundling to `miniprogram_npm` 

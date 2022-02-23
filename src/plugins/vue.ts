@@ -52,8 +52,8 @@ const getWxsBlock = (blocks: SFCBlock[]): (null | SFCBlock) => {
 }
 
 
-export default function vuePlugin (rawOptions?: VueOptions): Plugin {
-
+export default function vuePlugin (rawOptions: VueOptions = {}): Plugin {
+  const { useCDN } = rawOptions
   return {
     name: "vuemini:vue",
     async setup (build) {
@@ -208,7 +208,7 @@ export default function vuePlugin (rawOptions?: VueOptions): Plugin {
         }
 
         // cache asset urls used
-        if (ast?.imports) {
+        if (ast?.imports && !useCDN) {
           for (const imp of ast.imports) {
             const assetPath = path.resolve(path.dirname(filename), imp.path)
             cacheAssetPath(assetPath)

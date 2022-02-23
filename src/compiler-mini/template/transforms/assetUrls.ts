@@ -27,7 +27,7 @@ const defaultURLOptions: Required<AssetURLOptions> = {
 export function transformAssetUrls (
   options: AssetURLOptions | AssetURLTagConfig
 ): NodeTransform {
-  const assetOptions = normalizeOptions(options)
+  const assetOptions = normalizeAssetsURLOptions(options, defaultURLOptions)
 
   return (node, ctx) => {
     if (node.type === 1 as NodeTypes.ELEMENT) {
@@ -111,18 +111,19 @@ const isRelativeUrl = (url: string): boolean => {
   return firstChar === '.' || firstChar === '~' || firstChar === '@'
 }
 
-function normalizeOptions (
-  options: AssetURLOptions | AssetURLTagConfig
+export function normalizeAssetsURLOptions (
+  options: AssetURLOptions | AssetURLTagConfig,
+  defaultOptions: Required<AssetURLOptions>
 ): Required<AssetURLOptions> {
   if (Object.keys(options).some(key => Array.isArray((options as any)[key]))) {
     // legacy option format which directly passes in tags config
     return {
-      ...defaultURLOptions,
+      ...defaultOptions,
       tags: options as any
     }
   }
   return {
-    ...defaultURLOptions,
+    ...defaultOptions,
     ...options
   }
 }

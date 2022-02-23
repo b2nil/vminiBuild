@@ -13,6 +13,7 @@ import {
 
 import type { BuildOptions } from "esbuild"
 import type { UserConfig, CliOptions } from 'types'
+import { normalizeAssetsURLOptions } from './compiler-mini'
 
 const cli = cac("vmini")
 
@@ -65,31 +66,52 @@ async function getUserBuildConfig (opts: CliOptions): Promise<UserConfig> {
   return config as UserConfig
 }
 
-async function initBuildOptions (userOptions: UserConfig): Promise<BuildOptions> {
-  userOptions.vue = {
-    ...(userOptions.vue || {}),
+async function initBuildOptions (userConfig: UserConfig): Promise<BuildOptions> {
+  const { useCDN, ...userBuildOptions } = userConfig
+  userBuildOptions.vue = {
+    ...(userBuildOptions.vue || {}),
+    useCDN,
     style: {
-      ...(userOptions.vue?.style || {}),
+      ...(userBuildOptions.vue?.style || {}),
       postcssPlugins:
-        userOptions.vue?.style?.postcssPlugins
-          ? userOptions.vue?.style?.postcssPlugins
+        userBuildOptions.vue?.style?.postcssPlugins
+          ? userBuildOptions.vue?.style?.postcssPlugins
           : [
             customRequire(`postcss-pxtransform`)({
-              platform: userOptions.platform || `weapp`,
-              designWidth: userOptions.designWidth || 750
+              platform: userBuildOptions.platform || `weapp`,
+              designWidth: userBuildOptions.designWidth || 750
             })
           ],
       preprocessCustomRequire: customRequire
     },
     template: {
-      ...(userOptions.vue?.template || {}),
+      ...(userBuildOptions.vue?.template || {}),
       preprocessCustomRequire: customRequire
     }
   }
 
+  if (useCDN) {
+    let { transformAssetUrls } = userBuildOptions.vue.template!
+
+    if (!transformAssetUrls || transformAssetUrls === true) {
+      transformAssetUrls = {
+        base: `http://${useCDN.host}:${useCDN.port}/`
+      }
+    } else {
+      transformAssetUrls = normalizeAssetsURLOptions(transformAssetUrls, {
+        base: `http://${useCDN.host}:${useCDN.port}/`,
+        includeAbsolute: false,
+        tags: {}
+      })
+    }
+
+    userBuildOptions.vue.template!["transformAssetUrls"] = transformAssetUrls
+  }
+
+
   const buildOptions: BuildOptions = {
     entryPoints: ["src/app.ts", "src/app.config.ts"],
-    outdir: userOptions.outDir || `dist`,
+    outdir: userBuildOptions.outDir || `dist`,
     target: "esnext",
     format: "esm",
     bundle: true,
@@ -98,28 +120,28 @@ async function initBuildOptions (userOptions: UserConfig): Promise<BuildOptions>
     incremental: true,
     splitting: true,
     define: {
-      ...(userOptions.define || {}),
-      "process.env.__PLATFORM__": JSON.stringify(userOptions.platform || "weapp")
+      ...(userBuildOptions.define || {}),
+      "process.env.__PLATFORM__": JSON.stringify(userBuildOptions.platform || "weapp")
     },
-    watch: !userOptions.watch ? false : {
+    watch: !userBuildOptions.watch ? false : {
       onRebuild (error, _res) {
         if (error) console.error('[x] rebuild failed:', error.message, "\n", error.stack)
         else console.log('[+] rebuild succeeded')
       }
     },
-    logLevel: userOptions.logLevel,
+    logLevel: userBuildOptions.logLevel,
     chunkNames: 'common/[dir]/[name]-[hash]',
     assetNames: 'assets/[dir]/[name]-[hash]',
     plugins: [
       vueminiPlugin({
-        watch: userOptions.watch,
-        minify: userOptions.minify,
-        aliases: userOptions.aliases
+        watch: userBuildOptions.watch,
+        minify: userBuildOptions.minify,
+        aliases: userBuildOptions.aliases
       }),
-      vuePlugin(userOptions.vue),
-      styleLoader(userOptions.vue),
-      nativePlugin(userOptions.vue),
-      ...(userOptions.plugins || [])
+      vuePlugin(userBuildOptions.vue),
+      styleLoader(userBuildOptions.vue),
+      nativePlugin(userBuildOptions.vue),
+      ...(userBuildOptions.plugins || [])
     ]
   }
 
@@ -142,9 +164,26 @@ async function buildWithEsbuild (options: CliOptions) {
 
   const buildOptions = await initBuildOptions(userConfig)
 
+  // temprary hack to serve the whole src dir
+  if (userConfig.useCDN) {
+    esbuild.serve({
+      ...userConfig.useCDN,
+      servedir: `src`
+    }, {
+      entryPoints: [],
+      outdir: `src/${userConfig.useCDN?.servedir || "images"}`,
+      write: false
+    }).then(_server => {
+      // do nothing
+    })
+  }
+
   esbuild.build(buildOptions)
     .then(async (res) => {
-      if (options.w || options.watch) {
+      if (buildOptions.watch || userConfig.useCDN) {
+        if (userConfig.useCDN) {
+          console.log(`[+] serving static files at: http://${userConfig.useCDN.host}:${userConfig.useCDN.port}`)
+        }
         console.log('[+] watching...')
       } else {
         await printStats(res.metafile!, esbuild)

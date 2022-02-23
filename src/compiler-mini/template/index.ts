@@ -43,6 +43,7 @@ function preprocess (
 }
 
 export { getPlatformDirective } from "./utils"
+export { normalizeAssetsURLOptions } from "./transforms"
 
 export async function compileTemplate (
   template: string,

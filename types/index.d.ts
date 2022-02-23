@@ -1,7 +1,7 @@
 import type { SitemapConfig } from "./sitemap"
 import type { ProjectConfig } from "./project"
 import type { AppConfig, PageConfig } from "./config"
-import type { BuildOptions } from "esbuild"
+import type { BuildOptions, ServeOptions } from "esbuild"
 import type {
   SFCTemplateCompileOptions,
   SFCScriptCompileOptions,
@@ -39,6 +39,7 @@ export interface CliOptions {
 }
 
 export interface VueOptions {
+  useCDN?: boolean
   template?: Pick<
     SFCTemplateCompileOptions,
     'scoped' | 'compiler' | 'preprocessLang' | 'preprocessOptions' | 'compilerOptions' | 'transformAssetUrls' | 'preprocessCustomRequire'
@@ -56,6 +57,7 @@ export interface UserConfig {
   platform?: "weapp" | "alipay" | "swan" | "tt"
   designWidth?: number
   aliases?: false | Record<string, string>
+  useCDN?: ServeOptions["serve"]
   watch?: BuildOptions["watch"]
   minify?: BuildOptions["minify"]
   define?: BuildOptions["define"]
