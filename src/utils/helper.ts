@@ -46,8 +46,9 @@ export async function getNativeImportsHelperCode (config: PageConfig | AppConfig
 
       deAliased = path.relative(path.dirname(filename), deAliased)
       deAliased = deAliased.replace(/\\/g, "/")
-      config.usingComponents[compName] = deAliased.replace(/\.vue$/, "")
     }
+    // trim ".vue" extension in config
+    config.usingComponents[compName] = deAliased.replace(/\.vue$/, "")
 
     if (deAliased.endsWith(".vue")) {
       code += `import "${deAliased}";\n`

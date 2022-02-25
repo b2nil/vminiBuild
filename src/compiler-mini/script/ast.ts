@@ -162,7 +162,7 @@ export function extractImports (
   const mod = decl.source.value
   const dirname = path.dirname(filename)
   const deAliased = addMod(ret.imports, mod, dirname)
-  if (deAliased !== mod) {
+  if (deAliased !== mod && !deAliased.endsWith(".vue")) {
     const { start, end } = decl.source
     ret.s!.overwrite(start!, end!, `"${deAliased}"`)
   }
@@ -174,6 +174,8 @@ export function extractImports (
     if (!ret.vueComp.has(compName)) ret.vueComp?.add(compName)
 
     compName = hyphenate(compName)
-    ret.components[compName] = deAliased.replace(".vue", "")
+    // leave ".vue" to be trimmed when generating import helper codes
+    ret.components[compName] = deAliased
+    ret.s!.remove(decl.start!, decl.end!)
   }
 }
