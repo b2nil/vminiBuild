@@ -14,6 +14,7 @@ export enum EXTENSIONS {
   WXS = ".wxs"
 }
 
+export const __OUT__ = { dir: `dist` }
 export const __PROD__ = process.env.NODE_ENV === "production"
 export const appREG = /app\.(t|j)sx?$/
 export const appConfigREG = /app\.config\.(t|j)sx?$/
@@ -27,7 +28,10 @@ export function normalizePath (id: string): string {
   return isWindows ? id.replace(/\\/g, "\\\\") : id
 }
 
-export const getOutputFilename = (p: string, ext: string) => p.replace("src", "dist").replace(".vue", ext)
+export const getOutputFilename = (
+  p: string,
+  ext: string
+) => p.replace("src", __OUT__.dir).replace(".vue", ext)
 
 export async function emitFile (filename: string, ext: string, code: string) {
   const outputFilename = getOutputFilename(filename, ext)
@@ -84,7 +88,7 @@ export function resolveImports (namespace: string, build: PluginBuild) {
   })
 }
 
-export function getURLParams (search: string): Record<string, string> {
+export function parseVueRequest (search: string): Record<string, string> {
   let hashes = search.slice(search.indexOf('?') + 1).split('&')
   return hashes.reduce((params, hash) => {
     let [key, val] = hash.split('=')
@@ -94,14 +98,6 @@ export function getURLParams (search: string): Record<string, string> {
 
 export function getFullPath (args: OnResolveArgs) {
   return path.isAbsolute(args.path) ? args.path : path.join(args.resolveDir, args.path)
-}
-
-export async function tryAsync<T> (fn: () => Promise<T>, module: string, requiredFor: string) {
-  try {
-    return await fn()
-  } catch (err) {
-    throw new Error(`Package "${module}" is required for ${requiredFor}. Please run "npm i -D ${module}" and try again.`)
-  }
 }
 
 const getDeps = (): string[] => {

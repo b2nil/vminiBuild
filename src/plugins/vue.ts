@@ -18,6 +18,7 @@ import {
   compileScript,
   compileTemplate,
   compileStyleAsync,
+  getPlatformDirective,
 } from "../compiler-mini"
 
 import type { Plugin } from "esbuild"
@@ -26,7 +27,6 @@ import type {
   SFCBlock,
   SFCStyleBlock
 } from "@vue/compiler-sfc"
-import { getPlatformDirective } from '@/compiler-mini/template'
 
 // interface PluginData {
 //   descriptor: SFCDescriptor

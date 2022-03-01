@@ -1,6 +1,5 @@
 import { normalizePath } from './utils'
 
-export const configCache = new Map<string, any>()
 export const assetsCache = new Set<string>([])
 export const moduleImportsCache = new Set<string>([])
 export const utilsImportsCache = new Set<string>([])

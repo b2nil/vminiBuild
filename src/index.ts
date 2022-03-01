@@ -2,7 +2,12 @@ import fs from "fs"
 import path from 'path'
 import esbuild from "esbuild"
 import { cac } from "cac"
-import { customRequire, DEFINE, extractConfigFromFile } from './utils'
+import {
+  __OUT__,
+  DEFINE,
+  customRequire,
+  extractConfigFromFile,
+} from './utils'
 import {
   printStats,
   vuePlugin,
@@ -66,6 +71,17 @@ async function getUserBuildConfig (opts: CliOptions): Promise<UserConfig> {
   return config as UserConfig
 }
 
+function getEntryPoint (filename: string) {
+  const exts = [".ts", ".js"]
+  for (const ext of exts) {
+    const entry = path.resolve(process.cwd(), "src", `${filename}${ext}`)
+    if (fs.existsSync(entry)) return `src/${filename}${ext}`
+  }
+  console.warn(`[x] failed to find: src/${filename}.ts or src/${filename}.js\n`)
+  console.warn(`[x] must provide entry point: src/${filename}.ts or src/${filename}.js\n`)
+  process.exit(1)
+}
+
 async function initBuildOptions (userConfig: UserConfig): Promise<BuildOptions> {
   const { useCDN, ...userBuildOptions } = userConfig
   userBuildOptions.vue = {
@@ -108,9 +124,13 @@ async function initBuildOptions (userConfig: UserConfig): Promise<BuildOptions> 
     userBuildOptions.vue.template!["transformAssetUrls"] = transformAssetUrls
   }
 
+  const appEntry = getEntryPoint("app")
+  const configEntry = getEntryPoint("app.config")
+
+  __OUT__.dir = userBuildOptions.outDir || `dist`
 
   const buildOptions: BuildOptions = {
-    entryPoints: ["src/app.ts", "src/app.config.ts"],
+    entryPoints: [appEntry, configEntry],
     outdir: userBuildOptions.outDir || `dist`,
     target: "esnext",
     format: "esm",

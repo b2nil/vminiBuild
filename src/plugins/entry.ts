@@ -3,12 +3,11 @@ import fs from "fs"
 import {
   appConfigREG, appREG, emitFile, externals, isTS,
   normalizePath, resolveImports, loadRules, styleExts,
-  cacheAssetPath, configCache, DEFINE,
-  extractConfigFromFile, getNativeImportsHelperCode
+  cacheAssetPath, DEFINE, __OUT__,
+  extractConfigFromFile, getNativeImportsHelperCode,
 } from '../utils'
-import { cacheAppRelatedConfigs } from "./cache"
+import { emitAppRelatedConfigs } from "./cache"
 import {
-  emitJSONFiles,
   emitUtilsChunks,
   emitModuleChunks,
   copyAssets,
@@ -86,14 +85,14 @@ export default function vueminiPlugin (options: UserConfig = {}): Plugin {
 
       build.onLoad({ filter: /.*/, namespace: "config" }, async (args) => {
         const { path: p, pluginData, } = args
-        await cacheAppRelatedConfigs(pluginData as PluginData)
+        await emitAppRelatedConfigs(pluginData as PluginData)
 
         const appConfig = await extractConfigFromFile(p, DEFINE.APP_CONFIG) as AppConfig
         if (!appConfig) {
           console.warn(`[ERROR]: failed to extract app config`)
         }
 
-        const configOutfile = path.join(pluginData.projectDir, "dist/app.json")
+        const configOutfile = path.join(pluginData.projectDir, `${__OUT__.dir}/app.json`)
 
         const pages: string[] = []
         appConfig.pages.forEach((page, _index) => {
@@ -155,20 +154,19 @@ export default function vueminiPlugin (options: UserConfig = {}): Plugin {
       })
 
       build.onEnd(async () => {
-        await emitJSONFiles(configCache)
         await emitModuleChunks(build.esbuild, options)
         await emitUtilsChunks(build.esbuild, options)
         await copyAssets()
-        if (fs.existsSync(`dist/app.config.js`))
-          fs.rm(`dist/app.config.js`, (err) => {
+        if (fs.existsSync(`${__OUT__.dir}/app.config.js`))
+          fs.rm(`${__OUT__.dir}/app.config.js`, (err) => {
             if (err) {
-              console.error(`[x] error removing file: dist/app.config.js\n${err.stack}`)
+              console.error(`[x] error removing file: ${__OUT__.dir}/app.config.js\n${err.stack}`)
             }
           })
-        if (fs.existsSync(`dist/app.config.css`))
-          fs.rename(`dist/app.config.css`, `dist/app.wxss`, (err) => {
+        if (fs.existsSync(`${__OUT__.dir}/app.config.css`))
+          fs.rename(`${__OUT__.dir}/app.config.css`, `${__OUT__.dir}/app.wxss`, (err) => {
             if (err) {
-              console.error(`[x] failed to rename "dist/app.config.css" to "dist/app.wxss\n${err.stack}`)
+              console.error(`[x] failed to rename "${__OUT__.dir}/app.config.css" to "${__OUT__.dir}/app.wxss\n${err.stack}`)
             }
           })
       })

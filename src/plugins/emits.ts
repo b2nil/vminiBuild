@@ -5,72 +5,77 @@ import {
   assetsCache,
   utilsImportsCache,
   moduleImportsCache,
+  __OUT__
 } from '../utils'
 
 import type { Metafile, PluginBuild } from 'esbuild'
 import type { UserConfig } from 'types'
 
 export async function emitUtilsChunks (esbuild: PluginBuild["esbuild"], options: UserConfig) {
-  esbuild.build({
-    entryPoints: Array.from(utilsImportsCache),
-    outdir: "dist",
-    target: "esnext",
-    format: "esm",
-    chunkNames: 'common/[dir]/[name]-[hash]',
-    bundle: true,
-    splitting: true,
-    watch: options.watch,
-    minify: options.minify,
-    // incremental: true,
-    metafile: true,
-    color: true,
-  })
-    .then(async (res) => {
-      if (!options.watch)
-        await printStats(res.metafile, esbuild)
+  if (utilsImportsCache.size > 0) {
+    esbuild.build({
+      entryPoints: Array.from(utilsImportsCache),
+      outdir: __OUT__.dir,
+      target: "esnext",
+      format: "esm",
+      chunkNames: 'common/[dir]/[name]-[hash]',
+      bundle: true,
+      splitting: true,
+      watch: options.watch,
+      minify: options.minify,
+      // incremental: true,
+      metafile: true,
+      color: true,
     })
-    .catch(e => {
-      console.error(`[x] build error: \n${e.stack || e}`)
-      process.exit(1)
-    })
+      .then(async (res) => {
+        if (!options.watch)
+          await printStats(res.metafile, esbuild)
+      })
+      .catch(e => {
+        console.error(`[x] build error: \n${e.stack || e}`)
+        process.exit(1)
+      })
+  }
 }
 
 export async function emitModuleChunks (esbuild: PluginBuild["esbuild"], options: UserConfig) {
-  const entries = Array.from(moduleImportsCache)
-    .map(m => path.join(process.cwd(), "node_modules", m))
+  if (moduleImportsCache.size > 0) {
+    const entries = Array.from(moduleImportsCache)
+      .map(m => path.join(process.cwd(), "node_modules", m))
 
-  esbuild.build({
-    entryPoints: entries,
-    outdir: "dist/miniprogram_npm",
-    target: "esnext",
-    format: "esm",
-    chunkNames: 'chunks/[name]-[hash]',
-    bundle: true,
-    splitting: true,
-    // incremental: true,
-    metafile: true,
-    color: true,
-    watch: options.watch,
-    minify: options.minify
-  })
-    .then(async (res) => {
-      if (!options.watch)
-        await printStats(res.metafile, esbuild)
+    esbuild.build({
+      entryPoints: entries,
+      outdir: `${__OUT__.dir}/miniprogram_npm`,
+      target: "esnext",
+      format: "esm",
+      chunkNames: 'chunks/[name]-[hash]',
+      bundle: true,
+      splitting: true,
+      // incremental: true,
+      metafile: true,
+      color: true,
+      watch: options.watch,
+      minify: options.minify
     })
-    .catch(e => {
-      console.error(`[x] build error: \n${e.stack || e}`)
-      process.exit(1)
-    })
+      .then(async (res) => {
+        if (!options.watch)
+          await printStats(res.metafile, esbuild)
+      })
+      .catch(e => {
+        console.error(`[x] build error: \n${e.stack || e}`)
+        process.exit(1)
+      })
+  }
 }
 
 export async function printStats (metafile: Metafile, esbuild: PluginBuild["esbuild"]) {
   for (let [out, stats] of Object.entries(metafile.outputs)) {
     const inputs = stats.inputs
 
-    if (out === "dist/app.config.css") {
-      metafile.outputs["dist/app.wxss"] = stats
-      out = "dist/app.wxss"
-      delete metafile.outputs["dist/app.config.css"]
+    if (out === `${__OUT__.dir}/app.config.css`) {
+      metafile.outputs[`${__OUT__.dir}/app.wxss`] = stats
+      out = `${__OUT__.dir}/app.wxss`
+      delete metafile.outputs[`${__OUT__.dir}/app.config.css`]
     }
 
     for (const [k, v] of Object.entries(inputs)) {
@@ -105,7 +110,7 @@ export async function emitJSONFiles (
 
 export async function copyAssets () {
   Array.from(assetsCache).forEach(async (src) => {
-    const dest = src.replace(/(\\|\/)?src((\\|\/))/, "dist")
+    const dest = src.replace(/(\\|\/)?src((\\|\/))/, __OUT__.dir)
     if (fs.existsSync(src) && (await fs.promises.lstat(src)).isDirectory()) {
       await copyDir(src, dest)
     } else if (fs.existsSync(src) && !fs.existsSync(dest)) {
