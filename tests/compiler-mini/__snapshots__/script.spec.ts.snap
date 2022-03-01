@@ -3,8 +3,8 @@
 exports[`transform script should transform normal script 1`] = `
 "
 import { ref } from \\"@vue-mini/wechat\\"
-import ComOne from \\"../components/comp.vue\\"
-import ComTwo from \\"../components/comp2.vue\\"
+
+
 definePageConfig({
   a: {c: \\"d\\"},
   b: \\"a\\"
@@ -54,8 +54,8 @@ Object {
   },
   "b": "a",
   "usingComponents": Object {
-    "com-one": "../components/comp",
-    "com-two": "../components/comp2",
+    "com-one": "../components/comp.vue",
+    "com-two": "../components/comp2.vue",
   },
 }
 `;
@@ -63,8 +63,8 @@ Object {
 exports[`transform script should transform scriptSetup 1`] = `
 "
 import { ref } from \\"@vue-mini/wechat\\"
-import ComOne from \\"../components/comp.vue\\"
-import ComTwo from \\"../components/comp2.vue\\"
+
+
 
 definePageConfig({
   a: {c: \\"d\\"},
@@ -126,8 +126,8 @@ Object {
   },
   "b": "a",
   "usingComponents": Object {
-    "com-one": "../components/comp",
-    "com-two": "../components/comp2",
+    "com-one": "../components/comp.vue",
+    "com-two": "../components/comp2.vue",
   },
 }
 `;

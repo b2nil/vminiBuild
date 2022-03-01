@@ -1,0 +1,3 @@
+<wxs module="m" src="./test.wxs" />
+<view class="btn">{{ m.msg }}</view>
+<comp-one />

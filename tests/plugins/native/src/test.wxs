@@ -1,0 +1,3 @@
+var s = require("./pseudo.wxs")
+var msg = "Hi, this is a message from wxs module!";
+module.exports.msg = msg;

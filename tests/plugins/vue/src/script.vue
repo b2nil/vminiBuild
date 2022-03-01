@@ -1,14 +1,20 @@
 <template>
-  <view :class="$style.btn"/>
-  <view :class="test.btn"/>
+  <view :class="$style.btn">{{ data }}</view>
+  <button :class="test.btn" @click="method">click me</button>
 </template>
+
+<wxs module="m">
+var s = require("./pseudo.wxs")
+var msg = "Hi, this is a message from wxs module!";
+module.exports.msg = msg;
+</wxs>
 
 <script>
 import { ref } from "@vue-mini/wechat"
-import ComOne from "../components/comp.vue"
-import ComTwo from "../components/comp2.vue"
+import ComOne from "./components/comp.vue"
+import ComTwo from "./components/comp2.vue"
 definePageConfig({
-  a: {c: "d"},
+  a: { c: "d" },
   b: "a"
 })
 export default definePage({
@@ -17,10 +23,10 @@ export default definePage({
     ComTwo
   },
   props: { hi: Number },
-  setup(){
+  setup() {
     const data = ref(0)
     const method = () => { console.log() }
-    return { 
+    return {
       data,
       method
     }

@@ -1,5 +1,5 @@
 import { ref } from "@vue-mini/wechat";
-export default definePage({
+var stdin_default = definePage({
   properties: { hi: Number },
   setup() {
     const data = ref(0);
@@ -12,3 +12,6 @@ export default definePage({
     };
   }
 });
+export {
+  stdin_default as default
+};

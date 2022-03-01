@@ -66,8 +66,8 @@ const extractedConfig = {
   a: { c: "d" },
   b: "a",
   usingComponents: {
-    "com-one": "../components/comp",
-    "com-two": "../components/comp2"
+    "com-one": "../components/comp.vue",
+    "com-two": "../components/comp2.vue"
   }
 }
 
@@ -82,8 +82,8 @@ describe("transform script", () => {
     expect(ret.config).toEqual(extractedConfig)
 
     expect(ret.components).toEqual({
-      "com-one": "../components/comp",
-      "com-two": "../components/comp2"
+      "com-one": "../components/comp.vue",
+      "com-two": "../components/comp2.vue"
     })
 
     expect(ret.imports).toEqual(new Set<string>([
@@ -91,7 +91,7 @@ describe("transform script", () => {
       `${path.resolve(process.cwd(), "../components/comp2.vue")}`,
     ]))
 
-    expect(ret.code).toMatch(/"\.\.\/components\/.+\.vue"/)
+    expect(ret.code).not.toMatch(/"\.\.\/components\/.+\.vue"/)
     expect(ret.code).toMatchSnapshot()
 
     const post = compileScript(descriptor, ret, true)
@@ -109,8 +109,8 @@ describe("transform script", () => {
     expect(ret.config).toEqual(extractedConfig)
 
     expect(ret.components).toEqual({
-      "com-one": "../components/comp",
-      "com-two": "../components/comp2"
+      "com-one": "../components/comp.vue",
+      "com-two": "../components/comp2.vue"
     })
 
     expect(ret.imports).toEqual(new Set<string>([

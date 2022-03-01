@@ -7,9 +7,6 @@ const compileVue = async (src: string) => {
     format: "esm",
     bundle: false,
     write: false,
-    loader: {
-      ".ts": "ts"
-    },
     plugins: [vuePlugin()]
   })
 
@@ -19,9 +16,27 @@ const compileVue = async (src: string) => {
   return code
 }
 
-it.concurrent("should transform normal script", async () => {
-  expect.assertions(1)
-  console.warn = jest.fn()
-  await compileVue("./tests/plugins/vue/test.vue")
-  expect(console.warn).toHaveBeenCalled()
+describe("vue plugin", () => {
+  it("should transform .vue with normal script for bundling", async () => {
+    const res = await compileVue("./tests/plugins/vue/src/script.vue")
+    expect(res).toMatch(/import "\.\/components\/comp\.vue"/)
+    expect(res).toMatch(/import "\.\/components\/comp2\.vue"/)
+    expect(res).toMatch(/import "\.\/pseudo.wxs"/)
+    expect(res).toMatch("function definePageConfig(config)")
+    expect(res).toMatchSnapshot()
+  })
+
+  it("should transform .vue with script setup for bundling", async () => {
+    const res = await compileVue("./tests/plugins/vue/src/scriptSetup.vue")
+    expect(res).toMatch(/import "\.\/components\/comp\.vue"/)
+    expect(res).toMatch(/import "\.\/components\/comp2\.vue"/)
+    expect(res).toMatch(/import "\.\/test.wxs"/)
+    expect(res).toMatch("function definePageConfig(config)")
+    expect(res).toMatch("function defineProps(config)")
+    expect(res).toMatch("function defineExpose(config)")
+    expect(res).toMatch("function defineHookConfig(config)")
+
+    expect(res).toMatchSnapshot()
+  })
 })
+

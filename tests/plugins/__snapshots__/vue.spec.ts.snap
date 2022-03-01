@@ -1,0 +1,83 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`vue plugin should transform .vue with normal script for bundling 1`] = `
+"import { ref } from \\"@vue-mini/wechat\\";
+definePageConfig({
+  a: { c: \\"d\\" },
+  b: \\"a\\"
+});
+var script_default = definePage({
+  components: {
+    ComOne,
+    ComTwo
+  },
+  props: { hi: Number },
+  setup() {
+    const data = ref(0);
+    const method = () => {
+      console.log();
+    };
+    return {
+      data,
+      method
+    };
+  }
+});
+function definePageConfig(config) {
+  return config;
+}
+import \\"./components/comp.vue\\";
+import \\"./components/comp2.vue\\";
+import \\"./pseudo.wxs\\";
+import \\"./pseudo.wxs\\";
+export {
+  script_default as default
+};
+"
+`;
+
+exports[`vue plugin should transform .vue with script setup for bundling 1`] = `
+"import { ref, onPageScroll } from \\"@vue-mini/wechat\\";
+definePageConfig({
+  a: { c: \\"d\\" },
+  b: \\"a\\"
+});
+defineProps({
+  hi: Number
+});
+const data = ref(0);
+const method = () => {
+  console.log();
+};
+onPageScroll(({ scrollTop }) => {
+  console.log(\\"scrollTop:\\", scrollTop);
+});
+defineExpose({
+  data,
+  method
+});
+defineHookConfig({
+  listenPageScroll: true
+});
+function definePageConfig(config) {
+  return config;
+}
+function defineProps(config) {
+  return config;
+}
+function defineExpose(config) {
+  return config;
+}
+function defineHookConfig(config) {
+  return config;
+}
+const COMP_r3m0v3 = { ComOne, ComTwo };
+var scriptSetup_default = COMP_r3m0v3;
+import \\"./components/comp.vue\\";
+import \\"./components/comp2.vue\\";
+import \\"./test.wxs\\";
+export {
+  scriptSetup_default as default
+};
+"
+`;
