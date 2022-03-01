@@ -7,14 +7,18 @@ import {
   externals,
   EXTENSIONS,
   getFullPath,
-  getURLParams,
   replaceRules,
   extractConfig,
   resolveImports,
+  parseVueRequest,
   getRegExpMatchedCode,
   getNativeImportsHelperCode,
 } from "../utils"
-import { compileStyleAsync } from "../compiler-mini"
+import {
+  compileTemplate,
+  compileStyleAsync,
+  getPlatformDirective,
+} from "../compiler-mini"
 
 import type { Plugin } from "esbuild"
 import type { VueOptions, PageConfig } from 'types'
@@ -24,7 +28,7 @@ export default function nativePlugin (options: VueOptions = {}): Plugin {
     name: "vuemini:native",
     async setup (build) {
       build.onResolve({ filter: /\?native/ }, async (args) => {
-        const params = getURLParams(args.path)
+        const params = parseVueRequest(args.path)
 
         if (params.type) {
           args.path = args.path.split("?")[0]
@@ -132,11 +136,27 @@ export default function nativePlugin (options: VueOptions = {}): Plugin {
 
       build.onLoad({ filter: /.*/, namespace: "native-wxml" }, async (args) => {
         const filename = args.path
-        const source = await fs.promises.readFile(filename, "utf8")
-        const code = getRegExpMatchedCode(source, wxsSrcREG)
-        await emitFile(filename, EXTENSIONS.WXML, source)
+        let nativeTemplate = await fs.promises.readFile(filename, "utf8")
+        const importsCode = getRegExpMatchedCode(nativeTemplate, wxsSrcREG)
+
+        // should transform asset urls if useCDN
+        if (options.useCDN) {
+          const platformDir = getPlatformDirective(process.env.__PLATFORM__ || "weapp")
+          const ret = await compileTemplate(nativeTemplate, {
+            ...(options),
+            filename,
+            id: "wxml",
+            cssVars: [],
+            cssModules: {},
+            platformDir
+          })
+          nativeTemplate = ret.code
+        }
+
+        await emitFile(filename, EXTENSIONS.WXML, nativeTemplate)
+
         return {
-          contents: code,
+          contents: importsCode,
           resolveDir: path.dirname(args.path),
           loader: "js",
           watchFiles: [args.path]
