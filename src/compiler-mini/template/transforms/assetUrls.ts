@@ -18,8 +18,11 @@ const defaultURLOptions: Required<AssetURLOptions> = {
   includeAbsolute: false,
   tags: {
     video: ['src', 'poster'],
+    'live-player': ['src'],
+    audio: ['src'],
     source: ['src'],
     image: ['src'],
+    'cover-image': ['src']
   }
 }
 
