@@ -15,10 +15,11 @@
 
 - 开发依赖
   ```bash
-  yarn add -D vmini-build esbuild @vue/compiler-sfc
+  yarn add -D vmini-build esbuild @vue/compiler-sfc postcss-pxtransform postcss-url
   ```
+  - `postcss-pxtransform` 用于将 `px` 转为 `rpx`, 详见 [`postcss-pxtransform` 文档](https://github.com/NervJS/taro/tree/next/packages/postcss-pxtransform)。
+  - `postcss-url` 用于将样式文件中的 `url` 转换为 `base64` 格式，或在使用 `useCDN` 的情况下，在 `url` 中添加域名前缀
   - 如果使用 `pug` 或 css 预编译器，请自行安装依赖。
-  - 如果需要 `px` 转 `rpx`, 请安装 [`postcss-pxtransform`](https://github.com/NervJS/taro/tree/next/packages/postcss-pxtransform)，或其他类似 `postcss` 插件。
   
 - 项目依赖
   - 请参考 [`vue-mini`](https://vuemini.org/guide/installation.html) 文档
@@ -36,6 +37,7 @@
     - `platform` 和 `designWidth` 用于 `postcss-pxtransform`； 
     - `aliases` 用于设置别名，如果不提供，别名默认使用 `tsconfig.json` 中的 `compilerOptions.paths`。明确设置为 `false`，禁用别名。
     - `vue` 用于 vue 相关的编译设置，与 `@vue/compiler-sfc` 的配置基本相同，具体见 [`VueOptions`](./types/index.d.ts)；
+    - `useCDN` 用于配置本地静态资源开发服务器的 `host` 和 `port`。
     - 其他均与 esbuild 的 `build` 配置相同，具体见 [`esbuild` 文档]([./types/index.d.ts](https://esbuild.github.io/api/#build-api))。
     ```ts
     interface UserConfig {
@@ -44,6 +46,7 @@
       platform?: "weapp"
       designWidth?: number
       aliases?: false | Record<string, string>
+      useCDN?: ServeOptions["serve"]
       watch?: BuildOptions["watch"]
       minify?: BuildOptions["minify"]
       define?: BuildOptions["define"]
@@ -55,7 +58,11 @@
   - 构建配置文件中必须使用 `cjs` 或 `esm` 格式默认导出配置：
     ```ts
     exports.default = {
-      outDir: "dist"
+      outDir: "dist"，
+      useCDN: {
+        host: "localhost",
+        port: 3000
+      }
     }
     // 可直接使用 `defineBuildConfig` 来获得类型提示和代码补全, 无需引用
     export default defineBuildConfig({
@@ -293,9 +300,8 @@
       - [ ] style bindings
       - [ ] class bindings
 - [ ] native page and components bundling
-  - [ ] components
-    - [ ] third party libs
-      - [ ] cache module name for bundling to `miniprogram_npm` 
+  - [ ] third party libs
+    - [ ] cache module name for bundling to `miniprogram_npm` 
 - [ ] mini-app tag.d.ts for volar syntax highlighting
 
 ## 关于 `vue-mini`
