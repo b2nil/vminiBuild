@@ -39,7 +39,17 @@ export function normalizePath (id: string): string {
 export const getOutputFilename = (
   p: string,
   ext: string
-) => p.replace("src", __OUT__.dir).replace(".vue", ext)
+) => {
+  if (/src(\/|\\)/.test(p)) {
+    return p.replace("src", __OUT__.dir).replace(".vue", ext)
+  }
+
+  if (/node_modules(\/|\\)/.test(p)) {
+    return p.replace("node_modules", `${__OUT__.dir}/miniprogram_npm`)
+  }
+
+  return p
+}
 
 export async function emitFile (filename: string, ext: string, code: string) {
   const outputFilename = getOutputFilename(filename, ext)
