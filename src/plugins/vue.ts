@@ -7,11 +7,13 @@ import {
   emitFile,
   externals,
   getFullPath,
-  replaceRules,
   EXTENSIONS,
   getNativeImportsHelperCode,
   getRegExpMatchedCode,
-  reqREG
+  reqREG,
+  genPreprocessOptions,
+  genPostcssUrlOptions,
+  customRequire
 } from '../utils'
 import {
   parse,
@@ -27,14 +29,6 @@ import type {
   SFCBlock,
   SFCStyleBlock
 } from "@vue/compiler-sfc"
-
-// interface PluginData {
-//   descriptor: SFCDescriptor
-//   id: string
-//   filename: string
-//   index?: number
-//   isComponent?: boolean
-// }
 
 const getWxsBlock = (blocks: SFCBlock[]): (null | SFCBlock) => {
   let block = null
@@ -122,6 +116,7 @@ export default function vuePlugin (rawOptions: VueOptions = {}): Plugin {
         let cssCode = ``
         let cssModules: Record<string, Record<string, string>> = {}
 
+        const deps = new Set<string>([])
         const styleBlocks: SFCStyleBlock[] = descriptor.styles
         for (const styleBlock of styleBlocks) {
           const usedCSSModules = Boolean(styleBlock.module)
@@ -130,31 +125,36 @@ export default function vuePlugin (rawOptions: VueOptions = {}): Plugin {
             id,
             filename,
             source: styleBlock.content,
-            // scoped: style.scoped,//not to support yet
             modules: usedCSSModules,
             preprocessLang: styleBlock.lang as any,
-            preprocessOptions: {
-              includePaths: ["src/styles", "node_modules", path.dirname(filename)],
-              importer: [
-                (url: string) => {
-                  const file = replaceRules(url)
-                  const modulePath = path.join(process.cwd(), "node_modules", file)
-                  if (fs.existsSync(modulePath)) return { file: modulePath }
-                  return { file }
-                }
-              ],
-              ...(rawOptions?.style?.preprocessOptions || {})
-            }
+            preprocessOptions: genPreprocessOptions(
+              filename,
+              rawOptions?.style?.preprocessOptions
+            ),
+            postcssPlugins: [
+              ...(rawOptions?.style?.postcssPlugins || []),
+              customRequire(`postcss-url`)({
+                url: !rawOptions.useCDN ? "inline" : genPostcssUrlOptions(rawOptions)
+              })
+            ],
           })
 
           if (styleRes.errors.length) {
             console.warn(styleRes.errors.map((e: any) => `${e}`).join("\n"))
           }
 
+          if (styleRes.dependencies.size) {
+            Array
+              .from(styleRes.dependencies)
+              .map(d => {
+                if (!deps.has(d) && !d.startsWith(".vue")) deps.add(d)
+              })
+          }
+
           if (usedCSSModules) {
             const wxsModuleName = typeof styleBlock.module === "string"
               ? styleBlock.module
-              : "$style"
+              : "styles"
 
             cssModules[wxsModuleName] = {
               ...(styleRes.modules || {})
@@ -224,7 +224,7 @@ export default function vuePlugin (rawOptions: VueOptions = {}): Plugin {
           contents: codeForBundle,
           resolveDir: path.dirname(args.path),
           loader: "ts",
-          watchFiles: [args.path]
+          watchFiles: [args.path, ...Array.from(deps)]
         }
       })
     }

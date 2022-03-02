@@ -293,14 +293,9 @@
       - [ ] style bindings
       - [ ] class bindings
 - [ ] native page and components bundling
-  - [x] native template asset url transform
   - [ ] components
     - [ ] third party libs
       - [ ] cache module name for bundling to `miniprogram_npm` 
-- [ ] style
-  - [ ] postcss transform
-    - [ ] serve url locally if `useCDN` is enabled
-    - [ ] or convert url to base64 if not
 - [ ] mini-app tag.d.ts for volar syntax highlighting
 
 ## 关于 `vue-mini`

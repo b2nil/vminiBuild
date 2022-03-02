@@ -1,7 +1,14 @@
 import path from "path"
 import fs from "fs"
-import { cssREG, getFullPath, replaceRules } from "../utils"
 import { compileStyleAsync } from "../compiler-mini"
+import {
+  cssREG,
+  getFullPath,
+  genPreprocessOptions,
+  customRequire,
+  genPostcssUrlOptions
+} from "../utils"
+
 import type { Plugin } from "esbuild"
 import type { VueOptions } from 'types'
 
@@ -27,27 +34,22 @@ export default function styleLoader (options: VueOptions = {}): Plugin {
       build.onLoad({ filter: /.*/, namespace: "styles" }, async (args) => {
         const { path: filename, pluginData: { lang } } = args
         const source = await fs.promises.readFile(filename, "utf8")
+        const deps = new Set<string>([])
         const res = await compileStyleAsync({
           source,
           filename,
           id: "stylefile",
           preprocessLang: lang as any,
-          preprocessOptions: {
-            includePaths: [
-              path.dirname(filename),
-              "src/styles",
-              "node_modules"
-            ],
-            importer: [
-              (url: string) => {
-                const file = replaceRules(url)
-                const modulePath = path.join(process.cwd(), "node_modules", file)
-                if (fs.existsSync(modulePath)) return { file: modulePath }
-                return { file }
-              }
-            ],
-            ...(options?.style?.preprocessOptions || {})
-          },
+          preprocessOptions: genPreprocessOptions(
+            filename,
+            options?.style?.preprocessOptions
+          ),
+          postcssPlugins: [
+            ...(options?.style?.postcssPlugins || []),
+            customRequire(`postcss-url`)({
+              url: !options.useCDN ? "inline" : genPostcssUrlOptions(options)
+            })
+          ],
           ...(options?.style || {})
         })
 
@@ -55,11 +57,19 @@ export default function styleLoader (options: VueOptions = {}): Plugin {
           console.warn(res.errors.map((e) => `${e}`).join("\n"))
         }
 
+        if (res.dependencies.size) {
+          Array
+            .from(res.dependencies)
+            .map(d => {
+              if (!deps.has(d) && !d.startsWith(".vue")) deps.add(d)
+            })
+        }
+
         return {
           contents: res.code,
           resolveDir: path.dirname(args.path),
           loader: "css",
-          watchFiles: [args.path]
+          watchFiles: [args.path, ...Array.from(deps)]
         }
       })
     }

@@ -20,7 +20,15 @@ export const appREG = /app\.(t|j)sx?$/
 export const appConfigREG = /app\.config\.(t|j)sx?$/
 export const cssREG = /\.(css|less|scss|stylus|sass)$/
 export const styleExts = ["css", "less", "scss", "stylus", "sass"]
-export const customRequire = (id: string) => require(path.resolve(process.cwd(), `node_modules/${id}`))
+export const customRequire = (id: string) => {
+  try {
+    return require(path.resolve(process.cwd(), `node_modules/${id}`))
+  } catch (e) {
+    console.warn(`[x] failed to find ${id} in node_modules.`)
+    console.warn(`Consider to install it using:`)
+    console.warn(`\tyarn add -D ${id} or npm i -D ${id}`)
+  }
+}
 
 export const isTS = (f: string) => path.extname(f) === ".ts"
 export const isWindows = os.platform() === 'win32'

@@ -7,6 +7,7 @@ import {
   DEFINE,
   customRequire,
   extractConfigFromFile,
+  normalizeAssetsURLOptions
 } from './utils'
 import {
   printStats,
@@ -18,7 +19,6 @@ import {
 
 import type { BuildOptions } from "esbuild"
 import type { UserConfig, CliOptions } from 'types'
-import { normalizeAssetsURLOptions } from './compiler-mini'
 
 const cli = cac("vmini")
 
@@ -89,15 +89,13 @@ async function initBuildOptions (userConfig: UserConfig): Promise<BuildOptions> 
     useCDN,
     style: {
       ...(userBuildOptions.vue?.style || {}),
-      postcssPlugins:
-        userBuildOptions.vue?.style?.postcssPlugins
-          ? userBuildOptions.vue?.style?.postcssPlugins
-          : [
-            customRequire(`postcss-pxtransform`)({
-              platform: userBuildOptions.platform || `weapp`,
-              designWidth: userBuildOptions.designWidth || 750
-            })
-          ],
+      postcssPlugins: [
+        ...(userBuildOptions.vue?.style?.postcssPlugins || []),
+        customRequire(`postcss-pxtransform`)({
+          platform: userBuildOptions.platform || `weapp`,
+          designWidth: userBuildOptions.designWidth || 750
+        })
+      ],
       preprocessCustomRequire: customRequire
     },
     template: {

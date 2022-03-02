@@ -13,6 +13,7 @@ import {
   parseVueRequest,
   getRegExpMatchedCode,
   getNativeImportsHelperCode,
+  cacheAssetPath,
 } from "../utils"
 import {
   compileTemplate,
@@ -136,24 +137,35 @@ export default function nativePlugin (options: VueOptions = {}): Plugin {
 
       build.onLoad({ filter: /.*/, namespace: "native-wxml" }, async (args) => {
         const filename = args.path
-        let nativeTemplate = await fs.promises.readFile(filename, "utf8")
+        const nativeTemplate = await fs.promises.readFile(filename, "utf8")
         const importsCode = getRegExpMatchedCode(nativeTemplate, wxsSrcREG)
 
-        // should transform asset urls if useCDN
-        if (options.useCDN) {
-          const platformDir = getPlatformDirective(process.env.__PLATFORM__ || "weapp")
-          const ret = await compileTemplate(nativeTemplate, {
-            ...(options),
-            filename,
-            id: "wxml",
-            cssVars: [],
-            cssModules: {},
-            platformDir
-          })
-          nativeTemplate = ret.code
+        const platformDir = getPlatformDirective(process.env.__PLATFORM__ || "weapp")
+        let { code: templateCode, ast, errors } = await compileTemplate(nativeTemplate, {
+          ...(options.template || {}),
+          filename,
+          id: "wxml",
+          cssVars: [],
+          cssModules: {},
+          platformDir
+        })
+
+        if (errors.length) {
+          templateCode = ``
+          for (const err of errors) {
+            console.warn(`[x] ${err}`)
+          }
         }
 
-        await emitFile(filename, EXTENSIONS.WXML, nativeTemplate)
+        // cache asset urls used
+        if (ast?.imports && !options.useCDN) {
+          for (const imp of ast.imports) {
+            const assetPath = path.resolve(path.dirname(filename), imp.path)
+            cacheAssetPath(assetPath)
+          }
+        }
+
+        await emitFile(filename, EXTENSIONS.WXML, templateCode)
 
         return {
           contents: importsCode,
