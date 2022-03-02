@@ -78,11 +78,11 @@ export async function getNativeImportsHelperCode (config: PageConfig | AppConfig
   return code
 }
 
-export const wxsSrcREG = /(?<=\<wxs.+src=")(.+?)(?=")/g
-export const reqREG = /(?<=require\(")(.+?)(?=")/g
+export const wxsSrcREG = /(?<=\<wxs.+src=("|'))(.+?)(?=("|'))/g
+export const reqREG = /(?<=require\(("|'))(.+?)(?=("|'))/g
 
 export function getRegExpMatchedCode (source: string, regExp: RegExp) {
-  const matches = regExp.exec(source)
+  const matches = source.match(regExp)
   let code = ``
   if (matches) {
     for (const match of matches) {
