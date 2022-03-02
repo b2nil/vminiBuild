@@ -222,7 +222,7 @@ export function run () {
   cli
     .option("-p, --platform [platform]", "[string] weapp | alipay | swan | tt", { default: "weapp" })
     .option("-l, --loglevel <level>", `[string] debug | warn`)
-    .option("-c, --config <configFilePath>", `[string] specify config file path, defualt: mini.config.ts/js`)
+    .option("-c, --config <configFilePath>", `[string] specify config file path, default: mini.config.ts/js`)
 
   cli
     .command("build")
