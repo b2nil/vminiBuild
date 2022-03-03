@@ -34,7 +34,6 @@ export default function vueminiPlugin (options: UserConfig = {}): Plugin {
             watchFiles: [
               args.path
             ],
-            watchDirs: [path.basename(args.path)],
             pluginData: {
               projectDir
             }
@@ -65,7 +64,7 @@ export default function vueminiPlugin (options: UserConfig = {}): Plugin {
           path: args.path,
           watchFiles: [args.path],
           pluginData: {
-            projectDir: args.resolveDir
+            projectDir
           }
         }
       })
@@ -157,18 +156,21 @@ export default function vueminiPlugin (options: UserConfig = {}): Plugin {
         await emitModuleChunks(build.esbuild, options)
         await emitUtilsChunks(build.esbuild, options)
         await copyAssets()
-        if (fs.existsSync(`${__OUT__.dir}/app.config.js`))
+        if (fs.existsSync(`${__OUT__.dir}/app.config.js`)) {
           fs.rm(`${__OUT__.dir}/app.config.js`, (err) => {
             if (err) {
               console.error(`[x] error removing file: ${__OUT__.dir}/app.config.js\n${err.stack}`)
             }
           })
-        if (fs.existsSync(`${__OUT__.dir}/app.config.css`))
+        }
+
+        if (fs.existsSync(`${__OUT__.dir}/app.config.css`)) {
           fs.rename(`${__OUT__.dir}/app.config.css`, `${__OUT__.dir}/app.wxss`, (err) => {
             if (err) {
               console.error(`[x] failed to rename "${__OUT__.dir}/app.config.css" to "${__OUT__.dir}/app.wxss\n${err.stack}`)
             }
           })
+        }
       })
     }
   }

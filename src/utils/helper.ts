@@ -47,8 +47,12 @@ export async function getNativeImportsHelperCode (config: PageConfig | AppConfig
       deAliased = path.relative(path.dirname(filename), deAliased)
       deAliased = deAliased.replace(/\\/g, "/")
     }
+
     // trim ".vue" extension in config
-    config.usingComponents[compName] = deAliased.replace(/\.vue$/, "")
+    // and avoid changing third party libs
+    config.usingComponents[compName] = /node_modules/.test(deAliased)
+      ? deAliased.split("node_modules/")[1]
+      : deAliased.replace(/\.vue$/, "")
 
     if (deAliased.endsWith(".vue")) {
       code += `import "${deAliased}";\n`
@@ -80,6 +84,7 @@ export async function getNativeImportsHelperCode (config: PageConfig | AppConfig
 
 export const wxsSrcREG = /(?<=\<wxs.+src=("|'))(.+?)(?=("|'))/g
 export const reqREG = /(?<=require\(("|'))(.+?)(?=("|'))/g
+export const importREG = /(?<=@?import ("|'))(.+?)(?=("|'))/g
 
 export function getRegExpMatchedCode (source: string, regExp: RegExp) {
   const matches = source.match(regExp)

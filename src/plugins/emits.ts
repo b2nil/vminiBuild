@@ -8,28 +8,51 @@ import {
   __OUT__
 } from '../utils'
 
-import type { Metafile, PluginBuild } from 'esbuild'
+import type { BuildOptions, Metafile, PluginBuild } from 'esbuild'
 import type { UserConfig } from 'types'
+
+const getDefaultOptions = (options: UserConfig): Partial<BuildOptions> => ({
+  target: "esnext",
+  format: "esm",
+  chunkNames: 'common/[dir]/[name]-[hash]',
+  bundle: true,
+  splitting: true,
+  watch: options.watch,
+  minify: options.minify,
+  metafile: true,
+  color: true,
+})
 
 export async function emitUtilsChunks (esbuild: PluginBuild["esbuild"], options: UserConfig) {
   if (utilsImportsCache.size > 0) {
+
+    const utils = Array.from(utilsImportsCache).filter(v => /src(\\|\/)/.test(v))
+    const node_modules = Array.from(utilsImportsCache).filter(v => /node_modules/.test(v))
+
     esbuild.build({
-      entryPoints: Array.from(utilsImportsCache),
+      entryPoints: utils,
       outdir: __OUT__.dir,
-      target: "esnext",
-      format: "esm",
-      chunkNames: 'common/[dir]/[name]-[hash]',
-      bundle: true,
-      splitting: true,
-      watch: options.watch,
-      minify: options.minify,
-      // incremental: true,
-      metafile: true,
-      color: true,
+      outbase: "src",
+      ...getDefaultOptions(options)
     })
       .then(async (res) => {
         if (!options.watch)
-          await printStats(res.metafile, esbuild)
+          await printStats(res.metafile!, esbuild)
+      })
+      .catch(e => {
+        console.error(`[x] build error: \n${e.stack || e}`)
+        process.exit(1)
+      })
+
+    esbuild.build({
+      entryPoints: node_modules,
+      outdir: `${__OUT__.dir}/miniprogram_npm`,
+      outbase: "node_modules",
+      ...getDefaultOptions(options)
+    })
+      .then(async (res) => {
+        if (!options.watch)
+          await printStats(res.metafile!, esbuild)
       })
       .catch(e => {
         console.error(`[x] build error: \n${e.stack || e}`)
@@ -46,20 +69,12 @@ export async function emitModuleChunks (esbuild: PluginBuild["esbuild"], options
     esbuild.build({
       entryPoints: entries,
       outdir: `${__OUT__.dir}/miniprogram_npm`,
-      target: "esnext",
-      format: "esm",
-      chunkNames: 'chunks/[name]-[hash]',
-      bundle: true,
-      splitting: true,
-      // incremental: true,
-      metafile: true,
-      color: true,
-      watch: options.watch,
-      minify: options.minify
+      outbase: "node_modules",
+      ...getDefaultOptions(options)
     })
       .then(async (res) => {
         if (!options.watch)
-          await printStats(res.metafile, esbuild)
+          await printStats(res.metafile!, esbuild)
       })
       .catch(e => {
         console.error(`[x] build error: \n${e.stack || e}`)

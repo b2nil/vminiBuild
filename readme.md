@@ -101,7 +101,8 @@
     |-mini.config.ts    // 构建配置文件
   ```
 - `tsconfig.json` 和 `jsconfig.json` 设置
-  > 请添加以下设置，以便充分利用编译时宏函数
+  > - 请添加以下设置，以便充分利用编译时宏函数
+  > - 如需使用第三方组件库，如 `@vant/weapp`, 安装后，请设置如下路径别名
   ```json
   {
     "compilerOptions": {
@@ -110,7 +111,12 @@
       ],
       "types": [
         "vmini-build"
-      ]
+      ],
+      "paths": {
+        "@vant/weapp/*": [
+          "./node_modules/@vant/weapp/dist/*"
+        ]
+      }
     }
   }
   ```
@@ -299,9 +305,6 @@
     - [x] `v-bind`
       - [ ] style bindings
       - [ ] class bindings
-- [ ] native page and components bundling
-  - [ ] third party libs
-    - [ ] cache module name for bundling to `miniprogram_npm` 
 - [ ] mini-app tag.d.ts for volar syntax highlighting
 
 ## 关于 `vue-mini`

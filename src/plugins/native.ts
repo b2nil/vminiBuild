@@ -3,6 +3,7 @@ import fs from "fs"
 import {
   reqREG,
   wxsSrcREG,
+  importREG,
   emitFile,
   externals,
   EXTENSIONS,
@@ -73,12 +74,21 @@ export default function nativePlugin (options: VueOptions = {}): Plugin {
         const source = await fs.promises.readFile(filename, "utf8")
 
         if (lang === "wxss") {
+          // @import '../common/index.wxss'
+          let importCode = ``
+          const matches = source.match(importREG)
+          if (matches) {
+            importCode += matches
+              .map(v => `import "${v}?native&type=wxss";`)
+              .join("\n")
+          }
+
           await emitFile(filename, EXTENSIONS.WXSS, source)
 
           return {
-            contents: ``,
+            contents: importCode,
             resolveDir: path.dirname(args.path),
-            loader: "css",
+            loader: "js",
             watchFiles: [args.path]
           }
         }
