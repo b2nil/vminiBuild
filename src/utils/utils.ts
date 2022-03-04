@@ -35,7 +35,9 @@ export const isWindows = os.platform() === 'win32'
 export function normalizePath (id: string): string {
   return isWindows ? id.replace(/\\/g, "\\\\") : id
 }
-
+export const getFullAssetPath = (assetPath: string) => {
+  return path.resolve(process.cwd(), `src`, `${assetPath}`)
+}
 export const getOutputFilename = (
   p: string,
   ext: string

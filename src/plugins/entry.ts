@@ -1,10 +1,22 @@
 import path from "path"
 import fs from "fs"
 import {
-  appConfigREG, appREG, emitFile, externals, isTS,
-  resolveImports, loadRules, styleExts,
-  cacheAssetPath, DEFINE, __OUT__,
-  extractConfigFromFile, getNativeImportsHelperCode, getPagePath, getPagesEntryImportsHelperCode,
+  isTS,
+  DEFINE,
+  __OUT__,
+  emitFile,
+  externals,
+  loadRules,
+  styleExts,
+  appREG,
+  appConfigREG,
+  getPagePath,
+  resolveImports,
+  cacheAssetPath,
+  getFullAssetPath,
+  extractConfigFromFile,
+  getNativeImportsHelperCode,
+  getPagesEntryImportsHelperCode,
 } from '../utils'
 import { emitAppRelatedConfigs } from "./cache"
 import {
@@ -107,11 +119,8 @@ export default function vueminiPlugin (options: UserConfig = {}): Plugin {
           })
         })
 
-        const tabList = appConfig.tabBar?.list || []
-        const getFullAssetPath = (assetPath: string) => {
-          return path.resolve(process.cwd(), `src`, `${assetPath}`)
-        }
-
+        const tabBar = appConfig.tabBar
+        const tabList = tabBar?.list || []
         tabList.forEach(l => {
           if (l.iconPath) {
             cacheAssetPath(getFullAssetPath(l.iconPath))
@@ -120,6 +129,11 @@ export default function vueminiPlugin (options: UserConfig = {}): Plugin {
             cacheAssetPath(getFullAssetPath(l.selectedIconPath))
           }
         })
+
+        if (tabBar && tabBar.custom) {
+          const customTabBarPath = getPagePath(`custom-tab-bar/index`)
+          if (customTabBarPath) pages.push(customTabBarPath)
+        }
 
         let contents = await getPagesEntryImportsHelperCode(pages, filename)
 
