@@ -2,9 +2,9 @@ import path from "path"
 import fs from "fs"
 import {
   appConfigREG, appREG, emitFile, externals, isTS,
-  normalizePath, resolveImports, loadRules, styleExts,
+  resolveImports, loadRules, styleExts,
   cacheAssetPath, DEFINE, __OUT__,
-  extractConfigFromFile, getNativeImportsHelperCode,
+  extractConfigFromFile, getNativeImportsHelperCode, getPagePath, getPagesEntryImportsHelperCode,
 } from '../utils'
 import { emitAppRelatedConfigs } from "./cache"
 import {
@@ -83,10 +83,10 @@ export default function vueminiPlugin (options: UserConfig = {}): Plugin {
       })
 
       build.onLoad({ filter: /.*/, namespace: "config" }, async (args) => {
-        const { path: p, pluginData, } = args
+        const { path: filename, pluginData, } = args
         await emitAppRelatedConfigs(pluginData as PluginData)
 
-        const appConfig = await extractConfigFromFile(p, DEFINE.APP_CONFIG) as AppConfig
+        const appConfig = await extractConfigFromFile(filename, DEFINE.APP_CONFIG) as AppConfig
         if (!appConfig) {
           console.warn(`[ERROR]: failed to extract app config`)
         }
@@ -95,17 +95,15 @@ export default function vueminiPlugin (options: UserConfig = {}): Plugin {
 
         const pages: string[] = []
         appConfig.pages.forEach((page, _index) => {
-          let pagePath = path.join("src", page + ".vue")
-          pagePath = normalizePath(path.join(process.cwd(), pagePath))
-          pages.push(pagePath)
+          const pagePath = getPagePath(page)
+          if (pagePath) pages.push(pagePath)
         })
 
         const subPackages = appConfig?.subPackages || []
         subPackages.forEach((sub) => {
           sub.pages.forEach(page => {
-            let p = path.join("src", sub.root, page + ".vue")
-            p = normalizePath(path.join(process.cwd(), p))
-            pages.push(p)
+            const pagePath = getPagePath(page, sub.root)
+            if (pagePath) pages.push(pagePath)
           })
         })
 
@@ -123,7 +121,7 @@ export default function vueminiPlugin (options: UserConfig = {}): Plugin {
           }
         })
 
-        let contents = pages.map((p) => `import "${p}";`).join("\n")
+        let contents = await getPagesEntryImportsHelperCode(pages, filename)
 
         // check native components
         contents += "\n" + await getNativeImportsHelperCode(

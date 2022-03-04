@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import type { AppConfig, PageConfig } from 'types'
 import { appConfigREG, replaceRules } from '.'
-import { styleExts } from './utils'
+import { normalizePath, styleExts } from './utils'
 
 const getJSExt = (nativePath: string, filename: string) => {
   const postfixes = [".ts", ".js", "/index.ts", "/index.js"]
@@ -27,6 +27,51 @@ const getJsonOrWxml = (nativePath: string, filename: string, ext: string, isDir:
     code += `import "${possiblePath}?native&type=${ext}";\n`
   }
 
+  return code
+}
+
+export function getPagePath (page: string, subRoot?: string) {
+  const exts = [".vue", ".js", ".ts"]
+  for (const ext of exts) {
+    let temp = subRoot !== undefined
+      ? path.join("src", subRoot, page + ext)
+      : path.join("src", page + ext)
+    temp = normalizePath(path.join(process.cwd(), temp))
+    if (fs.existsSync(temp)) return temp
+  }
+
+  console.log(`[x] page entry ${page} not found!`)
+  return
+}
+
+export async function getPagesEntryImportsHelperCode (pages: string[], filename: string) {
+  let contents = ``
+  for (const page of pages) {
+    if (page.endsWith(".vue")) {
+      contents += `import "${page}";\n`
+    } else {
+      const ext = path.extname(page)
+      const p = page.replace(ext, "")
+      contents += `import "${page}?native&type=js";\n`
+      contents += getJsonOrWxml(p, filename, "json", false)
+      contents += getJsonOrWxml(p, filename, "wxml", false)
+      contents += getStyleImportHelperCode(p, filename, false)
+    }
+  }
+  return contents
+}
+
+function getStyleImportHelperCode (nativePath: string, filename: string, isDir: boolean) {
+  const exts = ["wxss", ...styleExts]
+  let code = ``
+  for (const ext of exts) {
+    const wxssPath = isDir ? `${nativePath}/index.${ext}` : `${nativePath}.${ext}`
+    const fullWxssPath = path.resolve(path.dirname(filename), wxssPath)
+    if (fs.existsSync(fullWxssPath)) {
+      code += `import "${wxssPath}?native&type=wxss";\n`
+      break
+    }
+  }
   return code
 }
 
@@ -65,16 +110,7 @@ export async function getNativeImportsHelperCode (config: PageConfig | AppConfig
         const isDir = /index/.test(jsExt)
         code += getJsonOrWxml(deAliased, filename, "json", isDir)
         code += getJsonOrWxml(deAliased, filename, "wxml", isDir)
-
-        const exts = ["wxss", ...styleExts]
-        for (const ext of exts) {
-          const wxssPath = isDir ? `${deAliased}/index.${ext}` : `${deAliased}.${ext}`
-          const fullWxssPath = path.resolve(path.dirname(filename), wxssPath)
-          if (fs.existsSync(fullWxssPath)) {
-            code += `import "${wxssPath}?native&type=wxss";\n`
-            break
-          }
-        }
+        code += getStyleImportHelperCode(deAliased, filename, isDir)
       }
     }
   }
