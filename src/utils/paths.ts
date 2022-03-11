@@ -32,19 +32,24 @@ export async function loadRules (opts: any): Promise<boolean> {
 }
 
 async function loadFromTsconfig () {
-  if (!fs.existsSync("tsconfig.json")) {
+  let configFilename = null
+  if (fs.existsSync("tsconfig.json")) {
+    configFilename = `tsconfig.json`
+  } else if (fs.existsSync("jsconfig.json")) {
+    configFilename = `jsconfig.json`
+  }
+
+  if (!configFilename) return
+
+  const rawConfig = await fs.promises.readFile(configFilename, { encoding: "utf8" })
+  const tjsconfig = extractConfig(`(${rawConfig.toString()})`, configFilename)
+
+  if (!tjsconfig?.compilerOptions?.paths) {
     return
   }
 
-  const rawTsconfig = await fs.promises.readFile("tsconfig.json", { encoding: "utf8" })
-  const tsconfig = extractConfig(`(${rawTsconfig.toString()})`, "tsconfig.json")
-
-  if (!tsconfig?.compilerOptions?.paths) {
-    return
-  }
-
-  for (const path in tsconfig.compilerOptions.paths) {
-    const dests: string[] = tsconfig.compilerOptions.paths[path]
+  for (const path in tjsconfig.compilerOptions.paths) {
+    const dests: string[] = tjsconfig.compilerOptions.paths[path]
     if (dests.length == 0) {
       continue
     }
