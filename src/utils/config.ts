@@ -40,9 +40,7 @@ export async function extractConfigFromFile (filename: string, macro?: string) {
     loader: { ".json": "json" }
   })
 
+  // [WARNING] source file must use UTF-8 encoding
   const out = res.outputFiles[0]
-  // [WARNING] `String.fromCharCode` has a size limit of 10k,
-  //            should avoid using it for large bundled codes
-  const code = String.fromCharCode.apply(null, out.contents)
-  return extractConfig(code, out.path, macro)
+  return extractConfig(out.text, out.path, macro)
 }
