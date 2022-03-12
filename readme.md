@@ -13,17 +13,17 @@
 
 ## 安装
 
-- 开发依赖
+- 直接安装依赖
   ```bash
   yarn add -D vmini-build esbuild @vue/compiler-sfc postcss-pxtransform postcss-url
   ```
-  - `postcss-pxtransform` 用于将 `px` 转为 `rpx`, 详见 [`postcss-pxtransform` 文档](https://github.com/NervJS/taro/tree/next/packages/postcss-pxtransform)。
-  - `postcss-url` 用于将样式文件中的 `url` 转换为 `base64` 格式，或在使用 `useCDN` 的情况下，在 `url` 中添加域名前缀
-  - 如果使用 `pug` 或 css 预编译器，请自行安装依赖。
-  
-- 项目依赖
-  - 请参考 [`vue-mini`](https://vuemini.org/guide/installation.html) 文档
-  - 以及 [`vue-mini` 脚手架模板](https://github.com/vue-mini/template) 的推荐
+
+- 使用 `degit` 拷贝模板到本地
+  ```bash
+  npx degit b2nil/vminiBuild/template your-project-name
+  cd your-project-name && git init
+  yarn install or npm install
+  ```
 
 
 ## 使用
