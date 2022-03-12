@@ -1,0 +1,9 @@
+<wxs module="m">
+var msg = "Hi, this is from wxs module";
+module.exports.message = msg;
+</wxs>
+<view class="home" style="--8800f34b-bgColor: {{bgColor}}; --8800f34b-color: {{color}}">
+  <image class="logo" src="../../images/vue-mini.png"></image>
+  <button class="btn" type="secondary" bind:tap="changeColor">change color</button>
+  <view class="greeting">{{ m.message }}</view>
+</view>

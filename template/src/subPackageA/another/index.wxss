@@ -1,0 +1,22 @@
+.home {
+  text-align: center;
+  background-color: var(--8800f34b-bgColor);
+  color: var(--8800f34b-color);
+}
+.logo {
+  width: 400rpx;
+  height: 400rpx;
+  margin-top: 120rpx;
+}
+.greeting {
+  color: var(--8800f34b-color);
+  font-size: 64rpx;
+  font-weight: bold;
+  margin-bottom: 120rpx;
+}
+.btn {
+  margin-bottom: 60rpx;
+  background-color: #168;
+  color: whitesmoke;
+}
+

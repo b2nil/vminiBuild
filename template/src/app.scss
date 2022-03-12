@@ -1,0 +1,9 @@
+@import "./styles/mixins.scss";
+@import "./styles/variables.scss";
+
+page {
+  color: $font-color;
+  font-size: $font-size;
+  font-family: sans-serif;
+  @include lightBackground;
+}

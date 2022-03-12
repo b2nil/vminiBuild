@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "lib": [
+      "esnext",
+      "dom"
+    ],
+    "outDir": "dist",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "noEmit": true,
+    "strict": true,
+    "allowJs": true,
+    "skipLibCheck": true,
+    "noUnusedLocals": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "noUnusedParameters": true,
+    "strictFunctionTypes": false,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "typeRoots": [
+      "node_modules/@types",
+      "node_modules/vmini-build/types"
+    ],
+    "types": [
+      "vmini-build"
+    ],
+    "baseUrl": "./",
+    "paths": {
+      "@vant/weapp/*": [
+        "./node_modules/@vant/weapp/dist/*"
+      ],
+      "@/*": [
+        "./src/*"
+      ]
+    }
+  }
+}

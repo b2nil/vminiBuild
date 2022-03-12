@@ -1,0 +1,2 @@
+var msg = "Hi, this is a message from wxs module!";
+module.exports.message = msg;
