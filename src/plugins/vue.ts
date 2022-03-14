@@ -87,7 +87,7 @@ export default function vuePlugin (rawOptions: VueOptions = {}): Plugin {
         let codeForBundle = ``
         if (descriptor.scriptSetup || descriptor.script) {
           const ret: TransformResult = {}
-          const script = compileScript(descriptor, ret)
+          const script = compileScript(descriptor, ret, rawOptions.script?.babelParserPlugins)
 
           // cache non-vue imports to build separately
           const imports = script.imports
@@ -108,7 +108,7 @@ export default function vuePlugin (rawOptions: VueOptions = {}): Plugin {
           // - to remove .vue imports and .vue components option
           // - to transform props to properties
           // - to transform script setup
-          const post = compileScript(descriptor, ret, true)
+          const post = compileScript(descriptor, ret, rawOptions.script?.babelParserPlugins, true)
           codeForEmit = post.code || ``
         }
 

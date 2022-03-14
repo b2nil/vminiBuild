@@ -94,7 +94,7 @@ describe("transform script", () => {
     expect(ret.code).not.toMatch(/"\.\.\/components\/.+\.vue"/)
     expect(ret.code).toMatchSnapshot()
 
-    const post = compileScript(descriptor, ret, true)
+    const post = compileScript(descriptor, ret, undefined, true)
     expect(post.code).toMatchSnapshot()
     expect(ret.config).toMatchSnapshot()
   })
@@ -119,7 +119,7 @@ describe("transform script", () => {
     ]))
     expect(ret.code).toMatchSnapshot()
 
-    const post = compileScript(descriptor, ret, true)
+    const post = compileScript(descriptor, ret, undefined, true)
     expect(post.code).toMatchSnapshot()
     expect(post.config).toMatchSnapshot()
   })

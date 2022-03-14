@@ -15,6 +15,9 @@ import type {
   TransformResult
 } from 'types'
 import type {
+  ParserPlugin
+} from '@babel/parser'
+import type {
   Identifier,
   CallExpression,
   ImportDeclaration,
@@ -147,6 +150,7 @@ const genMacroFuncCode = (funcName: string) => `function ${funcName}(config) { r
 export function compileScript (
   descriptor: SFCDescriptor,
   ret: TransformResult,
+  parserPlugins?: ParserPlugin[],
   post?: boolean
 ): TransformResult {
   if (post) {
@@ -169,9 +173,14 @@ export function compileScript (
     ret.isScriptSetup = true
   }
 
+  const plugins: ParserPlugin[] = []
+  if (parserPlugins) plugins.push(...parserPlugins)
+  if (ret.lang === "ts") plugins.push("typescript", "decorators-legacy")
+
   ret.s = new MagicString(ret.source!)
   if (!ret.scriptAst) {
     ret.scriptAst = babelParse(ret.source!, {
+      plugins,
       sourceType: "module"
     }).program.body
   }

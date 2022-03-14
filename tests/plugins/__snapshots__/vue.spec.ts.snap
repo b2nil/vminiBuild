@@ -29,7 +29,6 @@ function definePageConfig(config) {
 import \\"./components/comp.vue\\";
 import \\"./components/comp2.vue\\";
 import \\"./pseudo.wxs\\";
-import \\"./pseudo.wxs\\";
 export {
   script_default as default
 };
