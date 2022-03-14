@@ -6,29 +6,22 @@
   </view>
 </template>
 
-<script lang="ts">
-import { definePage, onReady, ref } from '@vue-mini/wechat'
+<script setup lang="ts">
+import { onReady, ref } from '@vue-mini/wechat'
 import CustomComp from "@/components/CustomComp.vue"
 
 definePageConfig({
   navigationBarTitleText: "Mine"
 })
 
-export default definePage({
-  components: {
-    CustomComp
-  },
-  setup (options, context) {
-    const greeting = ref("Have fun with Vue-Mini")
+const greeting = ref("Have fun with Vue-Mini")
 
-    onReady(() => {
-      console.log(options, context)
-    })
+onReady(() => {
+  console.log("script setup")
+})
 
-    return {
-      greeting
-    }
-  }
+defineExpose({
+  greeting
 })
 
 </script>
