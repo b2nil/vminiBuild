@@ -10,8 +10,10 @@ import {
   babelParse,
   SFCDescriptor
 } from "@vue/compiler-sfc"
+import { transformAST, shouldTransform } from "@vue/reactivity-transform"
 
 import type {
+  VueOptions,
   TransformResult
 } from 'types'
 import type {
@@ -128,9 +130,18 @@ function analyzeSetupAST (ret: TransformResult) {
   return res
 }
 
+function genImporterHelpers (importedHelpers: string[]) {
+  return `import { ${importedHelpers
+    .map(h => `${h} as _${h}`)
+    .join(', ')} } from '@vue-mini/wechat'\n`
+}
+
 function postScriptSetupTransform (ret: TransformResult) {
   const res = analyzeSetupAST(ret)
   let code = `\n`
+  if (ret.importedHelpers?.length) {
+    code += genImporterHelpers(ret.importedHelpers)
+  }
   if (res.imports) {
     code += res.imports
   }
@@ -150,7 +161,7 @@ const genMacroFuncCode = (funcName: string) => `function ${funcName}(config) { r
 export function compileScript (
   descriptor: SFCDescriptor,
   ret: TransformResult,
-  parserPlugins?: ParserPlugin[],
+  scriptOptions?: VueOptions["script"],
   post?: boolean
 ): TransformResult {
   if (post) {
@@ -174,15 +185,26 @@ export function compileScript (
   }
 
   const plugins: ParserPlugin[] = []
-  if (parserPlugins) plugins.push(...parserPlugins)
+  if (scriptOptions?.babelParserPlugins) plugins.push(...scriptOptions.babelParserPlugins)
   if (ret.lang === "ts") plugins.push("typescript", "decorators-legacy")
 
   ret.s = new MagicString(ret.source!)
   if (!ret.scriptAst) {
-    ret.scriptAst = babelParse(ret.source!, {
+    const scriptAst = babelParse(ret.source!, {
       plugins,
       sourceType: "module"
-    }).program.body
+    }).program
+
+    if (scriptOptions?.reactivityTransform && shouldTransform(ret.source!)) {
+      const { importedHelpers } = transformAST(scriptAst, ret.s)
+      if (importedHelpers.length) {
+        ret.isScriptSetup
+          ? ret.importedHelpers = importedHelpers
+          : ret.s.prepend(genImporterHelpers(importedHelpers))
+      }
+    }
+
+    ret.scriptAst = scriptAst.body
   }
 
   preScriptTransform(descriptor.filename, ret)

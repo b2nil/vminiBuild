@@ -60,6 +60,66 @@ Object {
 }
 `;
 
+exports[`transform script should transform normal script with reactivityTransform enabled 1`] = `
+"import { ref as _ref } from '@vue-mini/wechat'
+
+
+
+definePageConfig({
+  a: {c: \\"d\\"},
+  b: \\"a\\"
+})
+export default definePage({
+  components: {
+    ComOne,
+    ComTwo
+  },
+  props: { hi: Number },
+  setup(){
+    const data = _ref(0)
+    const method = () => { console.log(data.value) }
+    return ({ 
+      data,
+      method
+    })
+  }
+})
+
+function definePageConfig(config) { return config }
+"
+`;
+
+exports[`transform script should transform normal script with reactivityTransform enabled 2`] = `
+"import { ref as _ref } from \\"@vue-mini/wechat\\";
+export default definePage({
+  properties: { hi: Number },
+  setup() {
+    const data = _ref(0);
+    const method = () => {
+      console.log(data.value);
+    };
+    return {
+      data,
+      method
+    };
+  }
+});
+"
+`;
+
+exports[`transform script should transform normal script with reactivityTransform enabled 3`] = `
+Object {
+  "a": Object {
+    "c": "d",
+  },
+  "b": "a",
+  "usingComponents": Object {
+    "com-one": "../components/comp.vue",
+    "com-two": "../components/comp2.vue",
+  },
+}
+`;
+
 exports[`transform script should transform scriptSetup 1`] = `
 "
 import { ref } from \\"@vue-mini/wechat\\"
@@ -120,6 +180,78 @@ export default defineComponent({
 `;
 
 exports[`transform script should transform scriptSetup 3`] = `
+Object {
+  "a": Object {
+    "c": "d",
+  },
+  "b": "a",
+  "usingComponents": Object {
+    "com-one": "../components/comp.vue",
+    "com-two": "../components/comp2.vue",
+  },
+}
+`;
+
+exports[`transform script should transform scriptSetup with reactivityTransform enabled  1`] = `
+"
+
+
+
+definePageConfig({
+  a: {c: \\"d\\"},
+  b: \\"a\\"
+})
+
+defineProps({
+  hi: Number
+})
+
+defineHookConfig({
+  listenPageScroll: true
+})
+
+const data = _ref(null)
+
+const method = () => { console.log(data.value) }
+
+defineExpose(({
+  data,
+  method
+}))
+
+function definePageConfig(config) { return config }
+function defineProps(config) { return config }
+function defineExpose(config) { return config }
+function defineHookConfig(config) { return config }
+const COMP_r3m0v3 = { ComOne, ComTwo }
+export default COMP_r3m0v3
+"
+`;
+
+exports[`transform script should transform scriptSetup with reactivityTransform enabled  2`] = `
+"import { ref as _ref } from \\"@vue-mini/wechat\\";
+import { defineComponent } from \\"@vue-mini/wechat\\";
+export default defineComponent({
+  properties: {
+    hi: Number
+  },
+  setup() {
+    const data = _ref(null);
+    const method = () => {
+      console.log(data.value);
+    };
+    return {
+      data,
+      method
+    };
+  }
+}, {
+  listenPageScroll: true
+});
+"
+`;
+
+exports[`transform script should transform scriptSetup with reactivityTransform enabled  3`] = `
 Object {
   "a": Object {
     "c": "d",

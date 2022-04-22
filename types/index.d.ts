@@ -14,7 +14,7 @@ export * from "./sitemap"
 
 export interface TransformResult {
   s?: MagicString
-  lang?: string,
+  lang?: string
   source?: string
   code?: string
   imports?: Set<string>
@@ -23,6 +23,7 @@ export interface TransformResult {
   scriptAst?: Statement[]
   isScriptSetup?: boolean
   vueComp?: Set<string>
+  importedHelpers?: string[]
 }
 
 export interface CliOptions {
@@ -44,7 +45,7 @@ export interface VueOptions {
     SFCTemplateCompileOptions,
     'scoped' | 'compiler' | 'preprocessLang' | 'preprocessOptions' | 'compilerOptions' | 'transformAssetUrls' | 'preprocessCustomRequire'
   >
-  script?: Pick<SFCScriptCompileOptions, 'babelParserPlugins' | 'refSugar'>
+  script?: Pick<SFCScriptCompileOptions, 'babelParserPlugins' | 'reactivityTransform'>
   style?: Pick<
     SFCAsyncStyleCompileOptions,
     'modules' | 'modulesOptions' | 'preprocessLang' | 'preprocessOptions' | 'postcssOptions' | 'postcssPlugins' | 'preprocessCustomRequire'

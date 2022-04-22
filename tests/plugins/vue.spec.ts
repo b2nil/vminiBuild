@@ -11,7 +11,7 @@ const compileVue = async (src: string) => {
   })
 
   const out = res.outputFiles[0]
-  const code = String.fromCharCode.apply(null, out.contents)
+  const code = out.text
 
   return code
 }
