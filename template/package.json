@@ -16,7 +16,8 @@
     "postcss-url": "^10.1.3",
     "pug": "^3.0.2",
     "sass": "^1.49.7",
-    "vmini-build": "^0.4.2"
+    "vmini-build": "^0.4.2",
+    "vue": "^3.2.31"
   },
   "browserslist": [
     "iOS >= 10",
